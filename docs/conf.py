@@ -23,7 +23,7 @@ project = u'MQFactory'
 copyright = u'2018, Christophe VG'
 author = u'Christophe VG'
 
-from pypi_template import __version__
+from mqfactory import __version__
 # The short X.Y version
 version = __version__
 # The full version, including alpha/beta/rc tags
