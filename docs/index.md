@@ -8,6 +8,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/christophevg/py-mqfactory/badge.svg?branch=master)](https://coveralls.io/github/christophevg/py-mqfactory?branch=master)
 [![Built with PyPi Template](https://img.shields.io/badge/PyPi_Template-v0.0.5-blue.svg)](https://github.com/christophevg/pypi-template)
 
+```eval_rst
+.. warning:: **Work in Progress** - I've only just started working on this and I'm literally exploring my own code as I write it ;-) So until this warning is removed, I wouldn't trust myself using this ;-) Do play with it, but remember things can and will change overnight.
+```
 
 ## Rationale
 
