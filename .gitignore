@@ -1,0 +1,10 @@
+*.pyc
+*.log
+.DS_Store
+venv*
+dist
+*.egg-info
+build
+.coverage
+.tox
+docs/_build
