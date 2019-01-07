@@ -7,7 +7,7 @@ from threading import Thread
 class MessageQueue(object):
   def __init__(self, transport):
     self.transport        = transport
-    self.outbox           = []
+    self.outbox           = Outbox()
     self.before_sending   = []
     self.after_receiving  = []
 
@@ -31,6 +31,37 @@ class MessageQueue(object):
         (to, payload) = wrapper(to, payload)
       handler(self, to, payload)
     self.transport.on_message(to, wrapped_handler)
+
+
+class Outbox(object):
+  def __init__(self):
+    self.items = []
+    self.after_append  = []
+    self.after_pop     = []
+    self.after_setitem = []
+
+  def append(self, item):
+    self.items.append(item)
+    for handler in self.after_append:
+      handler(self, item)
+
+  def pop(self, index=0):
+    item = self.items.pop(index)
+    for handler in self.after_pop:
+      handler(self, index, item)
+    return item
+
+  def __len__(self):
+    return len(self.items)
+
+  def __getitem__(self, key):
+    return self.items[key]
+
+  def __setitem__(self, key, item):
+    self.items[key] = item
+    for handler in self.after_setitem:
+      handler(self, key, item)
+
 
 def Threaded(mq, interval=0.1):
   def processor():
