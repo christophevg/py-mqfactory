@@ -104,16 +104,16 @@ def test_multiple_receive_wrapper():
   mq = MessageQueue(transport)
   (to, payload) = make_message()
 
-  def add_number(number):
-    def add_numbers(to, payload):
+  def number(number):
+    def add_number(to, payload):
       return (
         "{0}{1}{0}".format(number, to),
         "{0}{1}{0}".format(number, payload)
       )
-    return add_numbers
-  mq.after_receiving.append(add_number(1))
-  mq.after_receiving.append(add_number(2))
-  mq.after_receiving.append(add_number(3))
+    return add_number
+  mq.after_receiving.append(number(1))
+  mq.after_receiving.append(number(2))
+  mq.after_receiving.append(number(3))
 
   delivered = []
   def accept(mq, to, payload):
