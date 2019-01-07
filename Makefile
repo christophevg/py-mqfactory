@@ -20,7 +20,7 @@ publish: dist
 test:
 	tox
 
-coverage: test requirements
+coverage: test
 	. venv/bin/activate; coverage report
 
 docs: requirements
