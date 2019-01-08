@@ -137,7 +137,7 @@ def test_threaded_outbox_processing():
   (to, payload) = make_message()
 
   mq.send(to, payload)
-  time.sleep(0.1) # give processor thread time to be run at least once
+  time.sleep(0.2) # give processor thread time to be run at least once
 
   assert len(transport.items) == 1
   assert transport.items[0] == (to, payload)
