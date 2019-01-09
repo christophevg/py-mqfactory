@@ -27,7 +27,9 @@ CLASSIFIERS      = [
   "Programming Language :: Python :: 3.5",
   "Programming Language :: Python :: 3.6",
 ]
-INSTALL_REQUIRES = []
+INSTALL_REQUIRES = [
+  "pymongo"
+]
 ENTRY_POINTS     = {}
 SCRIPTS          = []
 
