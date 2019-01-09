@@ -1,4 +1,4 @@
-from mqfactory.store import Store
+from mqfactory.store import Store, Collection
 
 class TransportMock(object):
   def __init__(self):
@@ -16,6 +16,15 @@ class TransportMock(object):
       self.routes[to](self, to, payload)
 
 class StoreMock(Store):
+  def __init__(self, collections={}):
+    self.collections = {}
+    for collection in collections:
+      self.collections[collection] = CollectionMock(collections[collection])
+
+  def __getitem__(self, key):
+    return self.collections[key]
+
+class CollectionMock(Collection):
   def __init__(self, items=[]):
     self.changelog = []
     self.items = items

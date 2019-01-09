@@ -1,6 +1,6 @@
 class MessageStore(object):
-  def __init__(self, store):
-    self.store = store
+  def __init__(self, collection):
+    self.collection = collection
     self.loaded = False
 
   def persist(self, mq):
@@ -19,7 +19,7 @@ class MessageStore(object):
     return item
 
   def after_append(self, outbox, item):
-    self.store.add(item)
+    self.collection.add(item)
     return item
 
   def before_pop(self, outbox, index, item):
@@ -27,7 +27,7 @@ class MessageStore(object):
     return (index, item)
 
   def after_pop(self, outbox, index, item):
-    self.store.remove(item)
+    self.collection.remove(item)
     return (index, item)
     
   def before_getitem(self, outbox, index):
@@ -35,10 +35,10 @@ class MessageStore(object):
     return index
 
   def after_setitem(self, outbox, index, old, new):
-    self.store.update(new)
+    self.collection.update(new)
     return (index, old, new)
 
   def load_items(self, outbox):
     if not self.loaded:
-      outbox.items = self.store.load()
+      outbox.items = self.collection.load()
       self.loaded = True
