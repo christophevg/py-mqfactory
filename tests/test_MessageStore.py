@@ -19,3 +19,6 @@ def test_store_actions():
     ("remove", ("to 1", "payload 1")),
     ("remove", ("to 2", "payload 2"))    
   ]
+
+# TODO test without actual MessageQueue
+# TODO test update
