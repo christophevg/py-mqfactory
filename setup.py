@@ -22,7 +22,8 @@ CLASSIFIERS      = [
   "Programming Language :: Python :: 3.7",
 ]
 INSTALL_REQUIRES = [
-  "pymongo"
+  "pymongo",
+  "paho-mqtt"
 ]
 ENTRY_POINTS     = {}
 SCRIPTS          = []

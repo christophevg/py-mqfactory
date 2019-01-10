@@ -1,9 +1,16 @@
-from mqfactory.store import Store, Collection
+from mqfactory.transport import Transport
+from mqfactory.store     import Store, Collection
 
-class TransportMock(object):
+class TransportMock(Transport):
   def __init__(self):
     self.items  = []
     self.routes = {}
+
+  def connect(self):
+    pass
+
+  def disconnect(self):
+    pass
   
   def send(self, to, payload):
     self.items.append((to, payload))
@@ -41,3 +48,67 @@ class CollectionMock(Collection):
     
   def update(self, item):
     self.changelog.append(("update", item))
+
+
+class PahoMock(object):
+  on_connect    = None
+  on_subscribe  = None
+  on_message    = None
+  on_disconnect = None
+  
+  def __init__(self, client_id="", clean_session=True, userdata=None,
+                     protocol="MQTTv311", transport="tcp"):
+    self.client_id    = client_id
+    self.username     = None
+    self.password     = None
+    self.will_topic   = None
+    self.will_payload = None
+    self.will_qos     = 0
+    self.will_reain   = False
+    self.hostname     = None
+    self.port         = None
+    self.handlers     = {}
+    self.queue        = []
+
+  def reinitialize(self, client_id="", clean_session=True, userdata=None, 
+                         protocol="MQTTv311", transport="tcp"):
+    self.client_id = client_id
+
+  def username_pw_set(self, username, password):
+    self.username = username
+    self.password = password
+
+  def will_set(self, topic, payload=None, qos=0, retain=False):
+    self.will_topic   = topic
+    self.will_payload = payload
+    self.will_qos     = qos
+    self.will_reatin  = retain
+
+  def connect(self, hostname, port):
+    self.hostname = hostname
+    self.port     = port
+    self.on_connect(self, self.id, [], 0)
+
+  def loop_start(self):
+    pass
+
+  def message_callback_add(self, topic, handler):
+    self.handlers[topic] = handler
+
+  def subscribe(self, topic):
+    return (0, 0)
+
+  def publish(self, topic, payload, qos=0, retain=False):
+    self.queue.append((topic, payload, qos, retain))
+
+  def disconnect(self):
+    self.on_disconnect()
+
+  def deliver(self):
+    for item in self.queue:
+      self.handlers[item[0]](self, None, MessageMock(item[0], item[1]))
+
+class MessageMock(object):
+  def __init__(self, topic, payload):
+    self.topic   = topic
+    self.payload = payload
