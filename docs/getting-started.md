@@ -79,6 +79,15 @@ Now in a separate terminal setup a mosquitto subscription:
 $ mosquitto_sub -v -t '#'
 ```
 
+Optionally, you can also monitor your MongoDB using [mongotail](https://github.com/mrsarm/mongotail):
+
+```bash
+$ pip install mongotail
+$ mongotail mqfactory -l 2
+Profiling level set to level 2
+$ mongotail mqfactory -f
+```
+
 And run the demo script:
 
 ```bash
@@ -90,6 +99,14 @@ The mosquitto subscription shows the message that passes through the broker:
 
 ```bash
 myself a message
+```
+
+The MongoDB logging will show three queries due to an attempt to load existing messages from the `messages`` collection, an insert of the message we want to send and a removal after successful sending:
+
+```bash
+2019-01-13 18:00:57.711 QUERY     [messages] : {}. 0 returned.
+2019-01-13 18:00:57.712 INSERT    [messages] : 1 inserted.
+2019-01-13 18:00:57.815 REMOVE    [messages] : {"_id": ObjectId("5c3b7cd9e4e2ad1793d2f94d")}. 1 deleted.
 ```
 
 Every aspect (almost technically literally) is an implementation of an interface, so adding a different store, transport, signing procedure, retry strategy, requires a rather small implementation of such an interface.
