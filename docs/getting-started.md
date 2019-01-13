@@ -101,7 +101,7 @@ The mosquitto subscription shows the message that passes through the broker:
 myself a message
 ```
 
-The MongoDB logging will show three queries due to an attempt to load existing messages from the `messages`` collection, an insert of the message we want to send and a removal after successful sending:
+The MongoDB logging will show three queries due to an attempt to load existing messages from the `messages` collection, an insert of the message we want to send and a removal after successful sending:
 
 ```bash
 2019-01-13 18:00:57.711 QUERY     [messages] : {}. 0 returned.
