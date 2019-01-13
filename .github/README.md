@@ -17,4 +17,4 @@ After a first rough implementation, specific for my original use case, I felt th
 
 ## Documentation
 
-Visit [Read the Docs](https://mqfactory.readthedocs.org) for the full documentation, including overviews and several other examples.
+Visit [Read the Docs](https://mqfactory.readthedocs.org) for the full documentation, including overviews and several examples.
