@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 from mqfactory.transport import Transport
 
 class MQTTTransport(Transport):
-  def __init__(self, uri, paho=None, id="", qos=1):
+  def __init__(self, uri, paho=None, id="", qos=0):
     self.client = paho or mqtt.Client()
     self.client.reinitialize(client_id=id)
     self.id     = id
