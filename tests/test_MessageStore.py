@@ -1,13 +1,15 @@
-from mqfactory import MessageQueue, MessageStore
+from mqfactory import MessageQueue
+
+from mqfactory.store import Persisting
 
 from . import TransportMock, StoreMock
 
 def test_store_actions():
-  mq = MessageQueue(TransportMock())
   store = StoreMock({"collection": [] })
-  ms = MessageStore(store["collection"])
-  ms.persist(mq)
-
+  mq = Persisting(
+         MessageQueue(TransportMock()),
+         into=store["collection"]
+       )
   mq.send("to 1", "payload 1")
   mq.send("to 2", "payload 2")
   mq.process_outbox()

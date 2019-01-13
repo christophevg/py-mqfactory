@@ -3,17 +3,6 @@ class MessageStore(object):
     self.collection = collection
     self.loaded = False
 
-  def persist(self, mq):
-    mq.outbox.before_append.append(self.before_append)
-    mq.outbox.after_append.append(self.after_append)
-
-    mq.outbox.before_pop.append(self.before_pop)
-    mq.outbox.after_pop.append(self.after_pop)
-
-    mq.outbox.before_getitem.append(self.before_getitem)
-    mq.outbox.after_setitem.append(self.after_setitem)
-    return mq
-
   def before_append(self, outbox, item):
     self.load_items(outbox)
     return item
