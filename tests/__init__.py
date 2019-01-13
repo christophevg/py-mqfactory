@@ -69,6 +69,8 @@ class PahoMock(object):
     self.port         = None
     self.handlers     = {}
     self.queue        = []
+    self.connected    = False
+    self.loop_started = False
 
   def reinitialize(self, client_id="", clean_session=True, userdata=None, 
                          protocol="MQTTv311", transport="tcp"):
@@ -87,10 +89,11 @@ class PahoMock(object):
   def connect(self, hostname, port):
     self.hostname = hostname
     self.port     = port
-    self.on_connect(self, self.id, [], 0)
+    self.on_connect(self, self.client_id, [], 0)
+    self.connected = True
 
   def loop_start(self):
-    pass
+    self.loop_started = True
 
   def message_callback_add(self, topic, handler):
     self.handlers[topic] = handler
@@ -103,6 +106,8 @@ class PahoMock(object):
 
   def disconnect(self):
     self.on_disconnect()
+    self.connected = False
+    self.loop_started = False
 
   def deliver(self):
     for item in self.queue:
