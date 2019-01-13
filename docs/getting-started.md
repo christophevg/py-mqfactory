@@ -25,7 +25,7 @@ $ mkdir demo
 $ cd demo
 $ virtualenv venv
 $ . venv/bin/activate
-(venv) $ pip install py-mqfactory
+(venv) $ pip install mqfactory
 ```
 
 Create a file `demo.py` containing:
