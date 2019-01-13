@@ -1,3 +1,5 @@
+from mqfactory import Message
+
 class MessageStore(object):
   def __init__(self, collection):
     self.collection = collection
@@ -8,7 +10,7 @@ class MessageStore(object):
     return item
 
   def after_append(self, outbox, item):
-    self.collection.add(item)
+    item.tags["id"] = self.collection.add(dict(item))
     return item
 
   def before_pop(self, outbox, index, item):
@@ -16,7 +18,7 @@ class MessageStore(object):
     return (index, item)
 
   def after_pop(self, outbox, index, item):
-    self.collection.remove(item)
+    self.collection.remove(item.tags["id"])
     return (index, item)
     
   def before_getitem(self, outbox, index):
@@ -24,10 +26,13 @@ class MessageStore(object):
     return index
 
   def after_setitem(self, outbox, index, old, new):
-    self.collection.update(new)
+    self.collection.update(old.tags["id"], dict(new))
     return (index, old, new)
 
   def load_items(self, outbox):
     if not self.loaded:
-      outbox.items = self.collection.load()
+      for doc in self.collection.load():
+        message = Message(doc["to"], doc["payload"])
+        message.tags["id"] = doc["_id"]
+        outbox.items.append(message)
       self.loaded = True

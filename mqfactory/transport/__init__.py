@@ -5,7 +5,7 @@ class Transport(object):
   def disconnect(self):
     raise NotImplementedError("implement disconnecting from the transport")
     
-  def send(self, to, payload):
+  def send(self, message):
     raise NotImplementedError("implement sending using transport")
 
   def on_message(self, to, handler):

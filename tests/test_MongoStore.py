@@ -58,7 +58,7 @@ def test_removing_documents():
   col = MongoCollection(mongo["col"])
 
   loaded_docs = col.load()
-  col.remove(loaded_docs[1])
+  col.remove(loaded_docs[1]["_id"])
 
   assert mongo.col.count_documents({}) == 2
   doc = mongo.col.find_one({"doc" : "test 1"}, {"_id": False})
@@ -79,7 +79,7 @@ def test_updating_documents():
   loaded_docs = col.load()
   doc = loaded_docs[1]
   doc["more"] = True
-  col.update(doc)
+  col.update(doc["_id"], doc)
 
   assert mongo.col.count_documents({}) == 3
   doc = mongo.col.find_one({"doc" : "test 1"}, {"_id": False})

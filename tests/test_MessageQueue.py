@@ -1,128 +1,124 @@
 import time
 
-from mqfactory import Threaded, MessageQueue
+from mqfactory import Message, Threaded, MessageQueue
 
 from . import TransportMock
 
 def test_send_message(message):
   transport = TransportMock()
   mq = MessageQueue(transport)
-  mq.send(*message)
+  mq.send(message.to, message.payload)
   mq.process_outbox()
 
   assert len(transport.items) == 1
-  assert transport.items[0] == tuple(message)
+  assert transport.items[0].to == message.to
+  assert transport.items[0].payload == message.payload
 
 def test_receive_message(message):
   transport = TransportMock()
   mq = MessageQueue(transport)
 
   delivered = []
-  def accept(mq, to, payload):
-    delivered.append((mq,) + tuple(message))
+  def accept(msg):
+    delivered.append(msg)
   mq.on_message(message.to, accept)
   
-  transport.items.append(tuple(message))
+  transport.items.append(message)
   transport.deliver()
 
   assert len(delivered) == 1
-  assert delivered[0] == (mq,) + tuple(message)
+  assert delivered[0] == message
 
 def test_single_send_wrapper(message):
   transport = TransportMock()
   mq = MessageQueue(transport)
 
-  def quotes(to, payload):
-    return ("'{0}'".format(to), "'{0}'".format(payload))
   mq.before_sending.append(quotes)
 
-  mq.send(*message)
+  mq.send(message.to, message.payload)
   mq.process_outbox()
 
   assert len(transport.items) == 1
-  assert transport.items[0] == quotes(*message)
+  quotes(message)
+  assert transport.items[0].to == message.to
+  assert transport.items[0].payload == message.payload
 
 def test_multiple_send_wrapper(message):
   transport = TransportMock()
   mq = MessageQueue(transport)
   
-  def number(number):
-    def add_number(to, payload):
-      return (
-        "{0}{1}{0}".format(number, to),
-        "{0}{1}{0}".format(number, payload)
-      )
-    return add_number
   mq.before_sending.append(number(1))
   mq.before_sending.append(number(2))
   mq.before_sending.append(number(3))
 
-  mq.send(*message)
+  mq.send(message.to, message.payload)
   mq.process_outbox()
 
   assert len(transport.items) == 1
-  assert transport.items[0] == (
-    "321{0}123".format(message.to),
-    "321{0}123".format(message.payload)
-  )
+  assert transport.items[0].to      == "321{0}123".format(message.to)
+  assert transport.items[0].payload == "321{0}123".format(message.payload)
 
 def test_single_receive_wrapper(message):
   transport = TransportMock()
   mq = MessageQueue(transport)
 
-  def quotes(to, payload):
-    return ("'{0}'".format(to), "'{0}'".format(payload))
   mq.after_receiving.append(quotes)
 
   delivered = []
-  def accept(mq, to, payload):
-    delivered.append((mq, to, payload))
+  def accept(msg):
+    delivered.append(msg)
 
   mq.on_message(message.to, accept)
   
-  transport.items.append(message)
+  transport.items.append(Message(message.to, message.payload))
   transport.deliver()
 
   assert len(delivered) == 1
-  assert delivered[0][1:] == quotes(*message)
+  assert delivered[0].to      == "'{0}'".format(message.to)
+  assert delivered[0].payload == "'{0}'".format(message.payload)
 
 def test_multiple_receive_wrapper(message):
   transport = TransportMock()
   mq = MessageQueue(transport)
 
-  def number(number):
-    def add_number(to, payload):
-      return (
-        "{0}{1}{0}".format(number, to),
-        "{0}{1}{0}".format(number, payload)
-      )
-    return add_number
   mq.after_receiving.append(number(1))
   mq.after_receiving.append(number(2))
   mq.after_receiving.append(number(3))
 
   delivered = []
-  def accept(mq, to, payload):
-    delivered.append((mq, to, payload))
+  def accept(msg):
+    delivered.append(msg)
 
   mq.on_message(message.to, accept)
   
-  transport.items.append(message)
+  transport.items.append(Message(message.to, message.payload))
   transport.deliver()
 
   assert len(delivered) == 1
-  assert delivered[0] == (
-    mq,
-    "321{0}123".format(message.to),
-    "321{0}123".format(message.payload)
-  )
+  assert delivered[0].to == "321{0}123".format(message.to)
+  assert delivered[0].payload == "321{0}123".format(message.payload)
 
 def test_threaded_outbox_processing(message):
   transport = TransportMock()
   mq = Threaded(MessageQueue(transport), interval=0.1)
 
-  mq.send(*message)
+  mq.send(message.to, message.payload)
   time.sleep(0.2) # give processor thread time to be run at least once
 
   assert len(transport.items) == 1
-  assert transport.items[0] == tuple(message)
+  assert transport.items[0].to == message.to
+  assert transport.items[0].payload == message.payload
+
+# simple message wrapper helper functions
+
+def quotes(msg):
+  msg.to      = "'{0}'".format(msg.to)
+  msg.payload = "'{0}'".format(msg.payload)
+  return msg
+
+def number(number):
+  def add_number(msg):
+    msg.to      = "{0}{1}{0}".format(number, msg.to)
+    msg.payload = "{0}{1}{0}".format(number, msg.payload)
+    return msg
+  return add_number

@@ -2,7 +2,7 @@ import pytest
 
 from mqfactory.transport.mqtt import MQTTTransport
 
-from . import PahoMock
+from . import PahoMock, PahoMessageMock
 
 def create_transport(uri="mqtt://localmock:1883", id="", qos=0):
   paho = PahoMock()
@@ -27,46 +27,52 @@ def test_connection_and_disconnection():
   assert not transport.connected
   assert not paho.connected
 
-def test_subscription_on_connect():
+def test_subscription_on_connect(message):
   (paho, transport) = create_transport()
-  def receive(client, data, message):
-    pass
-  transport.on_message("to", receive)
+  received = []
+  def receive(msg):
+    received.append(msg)
+  transport.on_message(message.to, receive)
   assert len(paho.handlers) == 0
   transport.connect()
   assert len(paho.handlers) == 1
-  assert paho.handlers["to"] == receive
+  # execute the handler (which is wrapped) to see its ours underneath
+  assert len(received) == 0
+  paho.handlers[message.to](
+    None, None, PahoMessageMock(message.to, message.payload)
+  )
+  assert len(received) == 1
+  assert received[0].to == message.to
+  assert received[0].payload == message.payload
 
 def test_send_fails_before_connect(message):
   (paho, transport) = create_transport()
   with pytest.raises(AssertionError):
-    transport.send(*message)
+    transport.send(message)
 
 def test_sending(message):
   (paho, transport) = create_transport()
   transport.connect()
-  transport.send(*message)
+  transport.send(message)
   assert len(paho.queue) == 1
-  assert paho.queue[0] == tuple(message) + (0, False)
+  assert paho.queue[0] == (message.to, message.payload, 0, False)
 
 def test_sending_with_qos(message):
   (paho, transport) = create_transport(qos=1)
   transport.connect()
-  transport.send(*message)
+  transport.send(message)
   assert len(paho.queue) == 1
-  assert paho.queue[0] == tuple(message) + (1, False)
+  assert paho.queue[0] == (message.to, message.payload, 1, False)
 
 def test_delivery(message):
   (paho, transport) = create_transport(qos=1)
   received = []
-  def receive(client, data, message):
-    received.append((client, data, message))
+  def receive(msg):
+    received.append(msg)
   transport.on_message(message.to, receive)
   transport.connect()
-  paho.queue.append(tuple(message) + (0, False))
+  paho.queue.append((message.to, message.payload, 0, False))
   paho.deliver()
   assert len(received) == 1
-  assert received[0][0] == paho
-  assert received[0][1] == None
-  assert received[0][2].topic == message.to 
-  assert received[0][2].payload == message.payload 
+  assert received[0].to == message.to 
+  assert received[0].payload == message.payload 

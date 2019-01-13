@@ -12,15 +12,15 @@ class TransportMock(Transport):
   def disconnect(self):
     pass
   
-  def send(self, to, payload):
-    self.items.append((to, payload))
+  def send(self, msg):
+    self.items.append(msg)
 
   def on_message(self, to, handler):
     self.routes[to] = handler
 
   def deliver(self):
-    for (to, payload) in self.items:
-      self.routes[to](self, to, payload)
+    for message in self.items:
+      self.routes[message.to](message)
 
 class StoreMock(Store):
   def __init__(self, collections={}):
@@ -41,13 +41,15 @@ class CollectionMock(Collection):
     return self.items
 
   def add(self, item):
-    self.changelog.append(("add", item))
+    id = len(self.changelog)
+    self.changelog.append(("add", id, dict(item)))
+    return id
 
-  def remove(self, item):
-    self.changelog.append(("remove", item))
+  def remove(self, id):
+    self.changelog.append(("remove", id))
     
-  def update(self, item):
-    self.changelog.append(("update", item))
+  def update(self, id, item):
+    self.changelog.append(("update", id, dict(item) ))
 
 
 class PahoMock(object):
@@ -72,7 +74,7 @@ class PahoMock(object):
     self.connected    = False
     self.loop_started = False
 
-  def reinitialize(self, client_id="", clean_session=True, userdata=None, 
+  def reinitialise(self, client_id="", clean_session=True, userdata=None, 
                          protocol="MQTTv311", transport="tcp"):
     self.client_id = client_id
 
@@ -111,9 +113,9 @@ class PahoMock(object):
 
   def deliver(self):
     for item in self.queue:
-      self.handlers[item[0]](self, None, MessageMock(item[0], item[1]))
+      self.handlers[item[0]](self, None, PahoMessageMock(item[0], item[1]))
 
-class MessageMock(object):
+class PahoMessageMock(object):
   def __init__(self, topic, payload):
     self.topic   = topic
     self.payload = payload

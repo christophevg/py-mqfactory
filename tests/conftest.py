@@ -11,8 +11,9 @@ class RandomMessage(object):
   def __getitem__(self, index):
     return [self.to, self.payload][index]
   def __iter__(self):
-    yield self.to
-    yield self.payload
+    yield ("to",      self.to)
+    yield ("payload", self.payload)
+    return
 
 @pytest.fixture
 def message():

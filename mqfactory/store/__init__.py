@@ -9,10 +9,10 @@ class Collection(object):
   def add(self, item):
     raise NotImplementedError("implement adding item to the collection")
 
-  def remove(self, item):
+  def remove(self, id):
     raise NotImplementedError("implement removing item from the collection")
 
-  def update(self, item):
+  def update(self, id, item):
     raise NotImplementedError("implement updating item in the store")
 
 from mqfactory.store.MessageStore import MessageStore
