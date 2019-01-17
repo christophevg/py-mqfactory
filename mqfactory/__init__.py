@@ -6,18 +6,7 @@ import logging
 from threading import Thread
 
 from mqfactory.Outbox import Outbox
-
-class Message(object):
-  def __init__(self, to, payload):
-    self.to      = to
-    self.payload = payload
-    self.tags    = {}
-
-  def __iter__(self):
-    yield ("to",      self.to)
-    yield ("payload", self.payload)
-    return
-
+from mqfactory.message import Message
 
 class MessageQueue(object):
   def __init__(self, transport):
