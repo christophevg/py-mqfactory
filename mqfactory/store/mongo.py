@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson.objectid import ObjectId 
 
 from mqfactory.store import Store, Collection
 
@@ -30,7 +31,7 @@ class MongoCollection(Collection):
     return self.collection.insert_one(doc).inserted_id
 
   def remove(self, id):
-    self.collection.delete_one({"_id" : id})
+    self.collection.delete_one({"_id" : ObjectId(id)})
 
   def update(self, id, doc):
-    self.collection.replace_one({"_id" : id}, doc)
+    self.collection.replace_one({"_id" : ObjectId(id)}, doc)

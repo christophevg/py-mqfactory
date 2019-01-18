@@ -10,7 +10,7 @@ class MessageStore(object):
     return item
 
   def after_append(self, outbox, item):
-    item.tags["id"] = self.collection.add(dict(item))
+    item.tags["id"] = str(self.collection.add(dict(item)))
     return item
 
   def before_pop(self, outbox, index, item):

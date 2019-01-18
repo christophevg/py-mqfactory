@@ -18,14 +18,14 @@ class MessageQueue(object):
 
   def send(self, to, payload):
     msg = Message(to, payload)
-    for wrapper in self.before_sending:
-      wrapper(msg)
     self.outbox.append(msg)
 
   def process_outbox(self):
     while len(self.outbox) > 0:
       msg = self.outbox[0]
       # try:
+      for wrapper in self.before_sending:
+        wrapper(msg)
       self.transport.send(msg)
       self.outbox.pop(0)
       # except Exception as e:
