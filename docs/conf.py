@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = u'MQFactory'
-copyright = u'2018, Christophe VG'
+copyright = u'2018-2019, Christophe VG'
 author = u'Christophe VG'
 
 from mqfactory import __version__
