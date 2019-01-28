@@ -34,7 +34,7 @@ class MessageQueue(object):
 
   def on_message(self, to, handler):
     def wrapped_handler(msg):
-      for wrapper in self.after_receiving:
+      for wrapper in self.after_receiving[::-1]:
         wrapper(msg)
       handler(msg)
     self.transport.on_message(to, wrapped_handler)
