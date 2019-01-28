@@ -41,15 +41,15 @@ class CollectionMock(Collection):
     return self.items
 
   def add(self, item):
-    id = len(self.changelog)
+    id = str(len(self.changelog))
     self.changelog.append(("add", id, dict(item)))
     return id
 
   def remove(self, id):
-    self.changelog.append(("remove", int(id)))
+    self.changelog.append(("remove", id))
     
   def update(self, id, item):
-    self.changelog.append(("update", int(id), dict(item) ))
+    self.changelog.append(("update", id, dict(item) ))
 
 
 class PahoMock(object):

@@ -16,10 +16,10 @@ def test_store_actions():
 
   assert store["collection"].changelog == [
     "load",
-    ("add",    1, {"to": "to 1", "payload" : "payload 1"}),
-    ("add",    2, {"to": "to 2", "payload" : "payload 2"}),
-    ("remove", 1),
-    ("remove", 2)
+    ("add",    "1", {"to": "to 1", "payload" : "payload 1"}),
+    ("add",    "2", {"to": "to 2", "payload" : "payload 2"}),
+    ("remove", "1"),
+    ("remove", "2")
   ]
 
 # TODO test without actual MessageQueue

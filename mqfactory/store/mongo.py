@@ -25,13 +25,26 @@ class MongoCollection(Collection):
     self.collection = collection
 
   def load(self):
-    return [ doc for doc in self.collection.find() ]
+    docs = []
+    for doc in self.collection.find():
+      doc["_id"] = str(doc["_id"])
+      docs.append(doc)
+    return docs
   
   def add(self, doc):
-    return self.collection.insert_one(doc).inserted_id
+    return str(self.collection.insert_one(doc).inserted_id)
 
   def remove(self, id):
-    self.collection.delete_one({"_id" : ObjectId(id)})
+    try:
+      id = ObjectId(id)
+    except:
+      pass
+    self.collection.delete_one({"_id" : id})
 
   def update(self, id, doc):
-    self.collection.replace_one({"_id" : ObjectId(id)}, doc)
+    try:
+      id = ObjectId(id)
+    except:
+      pass
+    doc.pop("_id")
+    self.collection.update_one({"_id" : id}, {"$set" : doc})
