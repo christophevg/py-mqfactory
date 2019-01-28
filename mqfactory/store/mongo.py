@@ -30,6 +30,13 @@ class MongoCollection(Collection):
       doc["_id"] = str(doc["_id"])
       docs.append(doc)
     return docs
+
+  def __getitem__(self, id):
+    try:
+      id = ObjectId(id)
+    except:
+      pass
+    return self.collection.find_one({"_id": id})
   
   def add(self, doc):
     return str(self.collection.insert_one(doc).inserted_id)

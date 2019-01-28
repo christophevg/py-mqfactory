@@ -5,7 +5,10 @@ class Store(object):
 class Collection(object):
   def load(self):
     raise NotImplementedError("implement loading the collection")
-  
+    
+  def __getitem__(self, key):
+    raise NotImplementedError("implement get item from collection")
+
   def add(self, item):
     raise NotImplementedError("implement adding item to the collection")
 

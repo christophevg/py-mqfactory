@@ -40,6 +40,9 @@ class CollectionMock(Collection):
     self.changelog.append("load")
     return self.items
 
+  def __getitem__(self, key):
+    return self.items[key]
+
   def add(self, item):
     id = str(len(self.changelog))
     self.changelog.append(("add", id, dict(item)))
