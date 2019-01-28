@@ -1,5 +1,11 @@
+import random
+import string
+
 from mqfactory.transport import Transport
 from mqfactory.store     import Store, Collection
+
+def generate_random_string(length=10):
+  return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
 
 class TransportMock(Transport):
   def __init__(self):
@@ -122,3 +128,13 @@ class PahoMessageMock(object):
   def __init__(self, topic, payload):
     self.topic   = topic
     self.payload = payload
+
+class SignatureMock(object):
+  def __init__(self, signature=generate_random_string()):
+    self.signature = signature
+
+  def sign(self, item):
+    item.tags["signature"] = self.signature
+
+  def validate(self, item):
+    assert item.tags["signature"] == self.signature

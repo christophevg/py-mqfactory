@@ -23,7 +23,8 @@ CLASSIFIERS      = [
 ]
 INSTALL_REQUIRES = [
   "pymongo",
-  "paho-mqtt"
+  "paho-mqtt",
+  "cryptography"
 ]
 ENTRY_POINTS     = {}
 SCRIPTS          = []
