@@ -95,8 +95,8 @@ def test_multiple_receive_wrapper(message):
   transport.deliver()
 
   assert len(delivered) == 1
-  assert delivered[0].to == "321{0}123".format(message.to)
-  assert delivered[0].payload == "321{0}123".format(message.payload)
+  assert delivered[0].to == "123{0}321".format(message.to)
+  assert delivered[0].payload == "123{0}321".format(message.payload)
 
 def test_threaded_outbox_processing(message):
   transport = TransportMock()
