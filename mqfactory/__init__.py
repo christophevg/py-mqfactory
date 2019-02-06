@@ -8,6 +8,7 @@ from threading import Thread
 from mqfactory.Outbox import Outbox
 from mqfactory.message import Message
 
+millis = lambda: int(round(time.time() * 1000))
 class MessageQueue(object):
   def __init__(self, transport):
     self.transport        = transport
