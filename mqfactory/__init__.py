@@ -15,6 +15,7 @@ class MessageQueue(object):
     self.outbox           = Outbox(self)
     self.before_sending   = []
     self.after_receiving  = []
+    self.after_handling   = []
     self.transport.connect()
 
   def send(self, to, payload):
@@ -38,6 +39,8 @@ class MessageQueue(object):
       for wrapper in self.after_receiving[::-1]:
         wrapper(msg)
       handler(msg)
+      for wrapper in self.after_handling[::-1]:
+        wrapper(msg)
     self.transport.on_message(to, wrapped_handler)
 
 
