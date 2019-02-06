@@ -4,9 +4,11 @@ class Outbox(object):
     self.items          = []
     self.after_append   = []
     self.after_pop      = []
+    self.after_defer    = []
     self.after_setitem  = []
     self.before_append  = []
     self.before_pop     = []
+    self.before_defer   = []
     self.before_getitem = []
 
   def append(self, item):
@@ -23,6 +25,17 @@ class Outbox(object):
     for handler in self.after_pop:
       (index, item) = handler(self, index, item)
     return item
+
+  def defer(self, index=0):
+    for handler in self.before_defer:
+      (index, item) = handler(self, index, self.items[index])
+    item = self.append(self.items.pop(index))
+    for handler in self.after_defer:
+      (index, item) = handler(self, index, item)
+    return item
+
+  def index(self, matches):
+    return self.items.index(next((x for x in self.items if matches(x)), [None]))
 
   def __len__(self):
     return len(self.items)
