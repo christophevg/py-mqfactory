@@ -9,11 +9,16 @@ from mqfactory.Outbox import Outbox
 from mqfactory.message import Message
 
 millis = lambda: int(round(time.time() * 1000))
+
+class DeferException(Exception):
+  pass
+
 class MessageQueue(object):
   def __init__(self, transport):
     self.transport        = transport
     self.outbox           = Outbox(self)
     self.before_sending   = []
+    self.after_sending    = []
     self.after_receiving  = []
     self.after_handling   = []
     self.transport.connect()
@@ -25,14 +30,18 @@ class MessageQueue(object):
   def process_outbox(self):
     while len(self.outbox) > 0:
       msg = self.outbox[0]
-      # try:
-      for wrapper in self.before_sending:
-        wrapper(msg)
-      self.transport.send(msg)
-      self.outbox.pop(0)
-      # except Exception as e:
-      #   logging.warn("sending failed: {0}".format(str(e)))
-      #   time.sleep(1)
+      try:
+        for wrapper in self.before_sending:
+          wrapper(msg)
+        self.transport.send(msg)
+        self.outbox.pop(0)
+        for wrapper in self.after_sending:
+          wrapper(msg)
+      except DeferException:
+        self.outbox.defer(0)
+      except Exception as e:
+        logging.warn("sending failed: {0}".format(str(e)))
+        time.sleep(1)
 
   def on_message(self, to, handler):
     def wrapped_handler(msg):
