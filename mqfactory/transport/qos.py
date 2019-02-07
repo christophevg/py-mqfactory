@@ -15,7 +15,7 @@ Acknowledgment works in several phases:
 '''
 
 def check_timeout(message):
-  return millis() - message.tags["sent"] < 5000
+  return millis() - message.tags["sent"] >= 5000
 
 class Acknowledgement(object):
   def __init__(self, mq, timedout=check_timeout, ack_channel="/ack"):

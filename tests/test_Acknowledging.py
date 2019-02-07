@@ -5,9 +5,9 @@ from mqfactory.transport.qos import check_timeout, Acknowledgement, Acknowledgin
 
 def test_check_timeout(message):
   message.tags["sent"] = millis()
-  assert check_timeout(message)
-  message.tags["sent"] = millis() - 5000
   assert not check_timeout(message)
+  message.tags["sent"] = millis() - 5000
+  assert check_timeout(message)
 
 def test_request_ack():
   # TODO
