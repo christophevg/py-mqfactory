@@ -27,21 +27,24 @@ class MessageQueue(object):
     msg = Message(to, payload)
     self.outbox.append(msg)
 
-  def process_outbox(self):
+  def process_entire_outbox(self):
     while len(self.outbox) > 0:
-      msg = self.outbox[0]
-      try:
-        for wrapper in self.before_sending:
-          wrapper(msg)
-        self.transport.send(msg)
-        self.outbox.pop(0)
-        for wrapper in self.after_sending:
-          wrapper(msg)
-      except DeferException:
-        self.outbox.defer(0)
-      except Exception as e:
-        logging.warn("sending failed: {0}".format(str(e)))
-        time.sleep(1)
+      self.process_outbox()
+
+  def process_outbox(self):
+    msg = self.outbox[0]
+    try:
+      for wrapper in self.before_sending:
+        wrapper(msg)
+      self.transport.send(msg)
+      self.outbox.pop(0)
+      for wrapper in self.after_sending:
+        wrapper(msg)
+    except DeferException:
+      self.outbox.defer(0)
+    except Exception as e:
+      logging.warn("sending failed: {0}".format(str(e)))
+      time.sleep(1)
 
   def on_message(self, to, handler):
     def wrapped_handler(msg):
@@ -56,7 +59,7 @@ class MessageQueue(object):
 def Threaded(mq, interval=0.1):
   def processor():
     while True:
-      mq.process_outbox()
+      mq.process_entire_outbox()
       time.sleep(interval)
   t = Thread(target=processor)
   t.daemon = True

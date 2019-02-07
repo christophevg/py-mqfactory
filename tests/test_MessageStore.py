@@ -12,7 +12,7 @@ def test_store_actions():
        )
   mq.send("to 1", "payload 1")
   mq.send("to 2", "payload 2")
-  mq.process_outbox()
+  mq.process_entire_outbox()
 
   assert store["collection"].changelog == [
     "load",
