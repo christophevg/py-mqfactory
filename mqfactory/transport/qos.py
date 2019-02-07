@@ -1,3 +1,5 @@
+import uuid
+
 from mqfactory import DeferException, millis
 from mqfactory.message import Message
 
@@ -22,11 +24,11 @@ class Acknowledgement(object):
     self.mq = mq
     self.timedout = timedout
     self.ack_channel = ack_channel
-    self.mq.on_message(self.ack, self.handle)
+    self.mq.on_message(self.ack_channel, self.handle)
     
   def request(self, message):
     if not "ack" in message.tags:
-      message.tags["ack"] = self.ack_channel
+      message.tags["ack"] = { "id": str(uuid.uuid4()), "to" : self.ack_channel }
     else:
       if self.timedout(message): raise DeferException
 
@@ -36,13 +38,15 @@ class Acknowledgement(object):
 
   def give(self, message):
     if "ack" in message.tags:
-      self.mq.send(message.tags["ack"], { "id" : message.tags["id"] } )
+      self.mq.send(message.tags["ack"]["to"], { "id" : message.tags["ack"]["id"] } )
 
   def handle(self, message):
-    self.mq.outbox.pop(lambda m: m.tags["id"] == message.payload["id"])
+    self.mq.outbox.pop(
+      self.mq.outbox.index(lambda m: m.tags["ack"]["id"] == message.payload["id"])
+    )
 
-def Acknowledging(mq):
-  acknowledgement = Acknowledgement(mq)
+def Acknowledging(mq, ack=None):
+  acknowledgement = ack or Acknowledgement(mq)
   mq.before_sending.append(acknowledgement.request)
   mq.after_sending.append(acknowledgement.wait)
   mq.after_handling.append(acknowledgement.give)

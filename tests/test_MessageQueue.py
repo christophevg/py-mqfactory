@@ -2,10 +2,7 @@ import time
 
 from mqfactory import Message, Threaded, MessageQueue
 
-from . import TransportMock
-
-def test_send_message(message):
-  transport = TransportMock()
+def test_send_message(transport, message):
   mq = MessageQueue(transport)
   mq.send(message.to, message.payload)
   mq.process_outbox()
@@ -14,8 +11,7 @@ def test_send_message(message):
   assert transport.items[0].to == message.to
   assert transport.items[0].payload == message.payload
 
-def test_receive_message(message):
-  transport = TransportMock()
+def test_receive_message(transport, message):
   mq = MessageQueue(transport)
 
   delivered = []
@@ -29,8 +25,7 @@ def test_receive_message(message):
   assert len(delivered) == 1
   assert delivered[0] == message
 
-def test_single_send_wrapper(message):
-  transport = TransportMock()
+def test_single_send_wrapper(transport, message):
   mq = MessageQueue(transport)
 
   mq.before_sending.append(quotes)
@@ -43,8 +38,7 @@ def test_single_send_wrapper(message):
   assert transport.items[0].to == message.to
   assert transport.items[0].payload == message.payload
 
-def test_multiple_send_wrapper(message):
-  transport = TransportMock()
+def test_multiple_send_wrapper(transport, message):
   mq = MessageQueue(transport)
   
   mq.before_sending.append(number(1))
@@ -58,8 +52,7 @@ def test_multiple_send_wrapper(message):
   assert transport.items[0].to      == "321{0}123".format(message.to)
   assert transport.items[0].payload == "321{0}123".format(message.payload)
 
-def test_single_receive_wrapper(message):
-  transport = TransportMock()
+def test_single_receive_wrapper(transport, message):
   mq = MessageQueue(transport)
 
   mq.after_receiving.append(quotes)
@@ -77,8 +70,7 @@ def test_single_receive_wrapper(message):
   assert delivered[0].to      == "'{0}'".format(message.to)
   assert delivered[0].payload == "'{0}'".format(message.payload)
 
-def test_multiple_receive_wrapper(message):
-  transport = TransportMock()
+def test_multiple_receive_wrapper(transport, message):
   mq = MessageQueue(transport)
 
   mq.after_receiving.append(number(1))
@@ -98,8 +90,7 @@ def test_multiple_receive_wrapper(message):
   assert delivered[0].to == "123{0}321".format(message.to)
   assert delivered[0].payload == "123{0}321".format(message.payload)
 
-def test_threaded_outbox_processing(message):
-  transport = TransportMock()
+def test_threaded_outbox_processing(transport, message):
   mq = Threaded(MessageQueue(transport), interval=0.1)
 
   mq.send(message.to, message.payload)

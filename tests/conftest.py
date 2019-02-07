@@ -1,6 +1,7 @@
 import pytest
 
 from . import generate_random_string
+from . import TransportMock
 
 class RandomMessage(object):
   def __init__(self):
@@ -19,3 +20,7 @@ class RandomMessage(object):
 @pytest.fixture
 def message():
   return RandomMessage()
+
+@pytest.fixture
+def transport():
+  return TransportMock()
