@@ -26,7 +26,10 @@ class TransportMock(Transport):
 
   def deliver(self):
     for message in self.items:
-      self.routes[message.to](message)
+      try:
+        self.routes[message.to](message)
+      except KeyError:
+        print("WARNING: no handler for route {0}".format(message.to))
 
 class StoreMock(Store):
   def __init__(self, collections={}):
