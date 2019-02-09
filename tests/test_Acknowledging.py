@@ -14,7 +14,6 @@ def test_check_timeout(message):
 def mocked_to(answers=[]):
   def f(msg):
     try:
-      print answers[0]
       return answers.pop(0)
     except IndexError:
       return False
