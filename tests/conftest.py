@@ -1,7 +1,7 @@
 import pytest
 
 from . import generate_random_string
-from . import TransportMock
+from . import TransportMock, StoreMock
 
 class RandomMessage(object):
   def __init__(self):
@@ -24,3 +24,11 @@ def message():
 @pytest.fixture
 def transport():
   return TransportMock()
+
+@pytest.fixture
+def store():
+  return StoreMock({ "collection": [] })
+
+@pytest.fixture
+def collection(store):
+  return store["collection"]
