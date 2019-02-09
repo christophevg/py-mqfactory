@@ -9,25 +9,20 @@ class MessageStore(object):
     self.load_items(outbox)
     return item
 
-  def after_append(self, outbox, item):
+  def after_append(self, outbox):
+    item = outbox.items[-1]
     item.tags["id"] = self.collection.add(dict(item))
     return item
 
-  def before_pop(self, outbox, index, item):
+  def before_pop(self, outbox, index):
     self.load_items(outbox)
-    return (index, item)
 
   def after_pop(self, outbox, index, item):
     self.collection.remove(item.tags["id"])
     return (index, item)
     
-  def before_getitem(self, outbox, index):
+  def before_getnext(self, outbox):
     self.load_items(outbox)
-    return index
-
-  def after_setitem(self, outbox, index, old, new):
-    self.collection.update(old.tags["id"], dict(new))
-    return (index, old, new)
 
   def load_items(self, outbox):
     if not self.loaded:
