@@ -27,7 +27,6 @@ class RsaSignature(Signature):
     }
     payload = serialize(item)
     item.tags["signature"]["hash"] =  base64.b64encode(sign(payload, self.key))
-    return item
   
   def validate(self, item):
     key = decode(self.keys[item.tags["signature"]["origin"]]["public"])

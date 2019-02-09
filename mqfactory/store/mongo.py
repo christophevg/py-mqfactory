@@ -39,7 +39,8 @@ class MongoCollection(Collection):
     return self.collection.find_one({"_id": id})
   
   def add(self, doc):
-    return str(self.collection.insert_one(doc).inserted_id)
+    id = str(self.collection.insert_one(doc).inserted_id)
+    return id
 
   def remove(self, id):
     try:

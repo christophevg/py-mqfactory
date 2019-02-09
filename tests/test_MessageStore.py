@@ -16,8 +16,8 @@ def test_store_actions(collection, transport):
   assert len(collection.changelog) == 5
   assert collection.changelog == [
     "load",
-    ("add",    "1", {"to": "to 1", "payload" : "payload 1"}),
-    ("add",    "2", {"to": "to 2", "payload" : "payload 2"}),
+    ("add",    "1", {"to": "to 1", "payload" : "payload 1", "tags" : {}}),
+    ("add",    "2", {"to": "to 2", "payload" : "payload 2", "tags" : {}}),
     ("remove", "1"),
     ("remove", "2")
   ]

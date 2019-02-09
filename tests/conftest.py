@@ -35,7 +35,7 @@ def transport():
 
 @pytest.fixture
 def store():
-  return StoreMock({ "collection": [] })
+  return StoreMock({ "collection": {} })
 
 @pytest.fixture
 def collection(store):

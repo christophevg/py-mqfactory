@@ -28,13 +28,20 @@ class Outbox(object):
   def defer(self, index=0):
     for handler in self.before_defer:
       handler(self, index)
-    self.items.append(self.items.pop(index))
-    for handler in self.after_defer:
-      handler(self)
+    item = None
+    try:
+      item = self.items.append(self.items.pop(index))
+      for handler in self.after_defer:
+        handler(self)
+    except IndexError:
+      # TODO fix this race condition, when a defer of a retry is done while
+      #      acknowledgement arrives and removes the item before this runs
+      pass
     return item
 
   def index(self, matches):
-    return self.items.index(next((x for x in self.items if matches(x)), [None]))
+    item = next((x for x in self.items if matches(x)), [None])
+    return self.items.index(item)
 
   def __len__(self):
     return len(self.items)

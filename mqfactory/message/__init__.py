@@ -16,4 +16,8 @@ class Message(object):
   def __iter__(self):
     yield ("to",      self.to)
     yield ("payload", self.payload)
+    yield ("tags",    self.tags)
     return
+
+  def __str__(self):
+    return str(dict(self))

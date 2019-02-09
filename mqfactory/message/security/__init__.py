@@ -7,5 +7,5 @@ class Signature(object):
 
 def Signing(mq, adding=Signature()):
   mq.before_sending.append(adding.sign)
-  mq.after_receiving.append(adding.validate)
+  mq.before_handling.append(adding.validate)
   return mq

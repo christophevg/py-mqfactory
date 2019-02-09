@@ -10,6 +10,7 @@ from mqfactory.transport import Transport
 
 class MQTTTransport(Transport):
   def __init__(self, uri, paho=None, id="", qos=0):
+    super(MQTTTransport, self).__init__()
     self.client = paho or mqtt.Client()
     self.client.reinitialise(client_id=id)
     self.id     = id
@@ -45,11 +46,11 @@ class MQTTTransport(Transport):
   def disconnect(self):
     self.client.disconnect()
   
-  def send(self, message):
+  def _send(self, message):
     assert self.connected
     self.client.publish(message.to, message.payload, self.qos)
 
-  def on_message(self, to, handler):
+  def _on_message(self, to, handler):
     self.subscriptions.append((to, handler))
     if self.connected:
       self.register_callback(to, handler)

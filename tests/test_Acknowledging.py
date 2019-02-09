@@ -14,6 +14,7 @@ def test_check_timeout(message):
 def mocked_to(answers=[]):
   def f(msg):
     try:
+      print answers[0]
       return answers.pop(0)
     except IndexError:
       return False
@@ -36,10 +37,13 @@ def test_resend_without_ack(transport, message):
   mq = setup_mq(transport, tos=[False, True])
   mq.send(message.to, message.payload)
 
-  mq.process_outbox()
+  mq.process_outbox() # send
   assert len(mq.outbox.items) == 1
 
-  mq.process_outbox()
+  mq.process_outbox() # defer
+  assert len(transport.items) == 1
+
+  mq.process_outbox() # send retry
   assert len(transport.items) == 2
 
 def test_receive_ack(transport, message):
@@ -47,7 +51,7 @@ def test_receive_ack(transport, message):
   mq.send(message.to, message.payload)
   mq.process_outbox()
   id = mq.outbox.items[0].tags["ack"]["id"]
-  ack = Message("testing", { "id" : id } )
+  ack = Message("testing", {}, { "ack" : { "id" : id } } )
   transport.send(ack)
   transport.deliver()
 
@@ -67,4 +71,4 @@ def test_give_ack(transport, message):
 
   assert len(mq.outbox.items) == 1
   assert mq.outbox.items[0].to == "ack"
-  assert mq.outbox.items[0].payload == {"id" : "abc"}
+  assert mq.outbox.items[0].tags == { "ack" : {"id" : "abc"} }

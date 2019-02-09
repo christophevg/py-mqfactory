@@ -1,6 +1,8 @@
 import random
 import string
+import copy
 
+from mqfactory.message   import Message
 from mqfactory.transport import Transport
 from mqfactory.store     import Store, Collection
 
@@ -9,8 +11,10 @@ def generate_random_string(length=10):
 
 class TransportMock(Transport):
   def __init__(self):
+    super(TransportMock, self).__init__()
     self.items  = []
     self.routes = {}
+    self.log    = []
 
   def connect(self):
     pass
@@ -18,18 +22,23 @@ class TransportMock(Transport):
   def disconnect(self):
     pass
   
-  def send(self, msg):
+  def _send(self, msg):
     self.items.append(msg)
 
-  def on_message(self, to, handler):
+  def _on_message(self, to, handler):
     self.routes[to] = handler
 
   def deliver(self):
-    for message in self.items:
+    while len(self.items) > 0:
+      message = self.items.pop(0)
+      self.log.append((message.to, message.payload))
       try:
         self.routes[message.to](message)
       except KeyError:
         print("WARNING: no handler for route {0}".format(message.to))
+
+  def deliver_direct(self, to, payload):
+    self.routes[to](Message(to, payload))
 
 class StoreMock(Store):
   def __init__(self, collections={}):
@@ -38,30 +47,34 @@ class StoreMock(Store):
       self.collections[collection] = CollectionMock(collections[collection])
 
   def __getitem__(self, key):
+    if not key in self.collections:
+      self.collections[key] = CollectionMock()
     return self.collections[key]
 
 class CollectionMock(Collection):
-  def __init__(self, items=[]):
+  def __init__(self, items=None):
     self.changelog = []
-    self.items = items
+    self.items = items or {}
   
   def load(self):
     self.changelog.append("load")
-    return self.items
+    return self.items.values()
 
   def __getitem__(self, key):
     return self.items[key]
 
   def add(self, item):
-    id = str(len(self.changelog))
-    self.changelog.append(("add", id, dict(item)))
+    if "_id" in item:
+      id = item["_id"]
+    else:
+      id = str(len(self.changelog))
+    self.items[id] = item
+    self.changelog.append(("add", id, copy.deepcopy(dict(item))))
     return id
 
   def remove(self, id):
     self.changelog.append(("remove", id))
-    
-  def update(self, id, item):
-    self.changelog.append(("update", id, dict(item) ))
+    self.items.pop(id)
 
 
 class PahoMock(object):
