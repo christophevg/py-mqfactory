@@ -1,6 +1,7 @@
 import random
 import string
 import copy
+import logging
 
 from mqfactory.message   import Message
 from mqfactory.transport import Transport
@@ -35,7 +36,7 @@ class TransportMock(Transport):
       try:
         self.routes[message.to](message)
       except KeyError:
-        print("WARNING: no handler for route {0}".format(message.to))
+        logging.warning("no handler for route {0}".format(message.to))
 
   def deliver_direct(self, to, payload):
     self.routes[to](Message(to, payload))
