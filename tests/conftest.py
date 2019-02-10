@@ -1,34 +1,18 @@
 import copy
 import pytest
 
+from mqfactory.message import Message
+
 from . import generate_random_string
 from . import TransportMock, StoreMock
 
-class RandomMessage(object):
-  def __init__(self):
-    self.to      = generate_random_string()
-    self.payload = generate_random_string()
-    self.tags    = {}
-    self.private = {}
-
-  def copy(self):
-    c = RandomMessage()
-    c.to = self.to
-    c.payload = self.payload
-    c.tags = copy.deepcopy(self.tags)
-    return c
-
-  def __getitem__(self, index):
-    return [self.to, self.payload][index]
-
-  def __iter__(self):
-    yield ("to",      self.to)
-    yield ("payload", self.payload)
-    return
-
 @pytest.fixture
 def message():
-  return RandomMessage()
+  to      = generate_random_string()
+  payload = generate_random_string()
+  tags    = {}
+  id      = generate_random_string()
+  return Message(to, payload, tags, id)
 
 @pytest.fixture
 def transport():
@@ -41,3 +25,11 @@ def store():
 @pytest.fixture
 def collection(store):
   return store["collection"]
+
+@pytest.fixture
+def id_generator():
+  def generator():
+    generator.id += 1
+    return generator.id
+  generator.id = 0
+  return generator

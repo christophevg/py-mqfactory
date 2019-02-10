@@ -28,6 +28,8 @@ $ . venv/bin/activate
 (venv) $ pip install mqfactory
 ```
 
+> TIP: if you want to work from the repository you can also use pip to install mqfactory: `pip install /path/to/cloned/repository/mqfactory`
+
 Create a file `demo.py` containing:
 
 ```python
@@ -129,8 +131,8 @@ $ mongotail mqfactory -f
 And run the demo script:
 
 ```bash
-(venv) $ python demo.py 
-received a message from myself, tagged with {u'ack': {u'to': u'/ack', u'id': u'cb4cbc1a-87da-4220-a7c0-1ed935d5852f'}}
+(venv) $ LOG_LEVEL=INFO python demo.py 
+received a message from myself, tagged with {u'ack': u'/ack', u'id': u'abe527c6-14fd-414e-a43b-166ed2e84a34'}
 ```
 
 The mosquitto subscription shows the messages as they passes through the broker:
@@ -139,25 +141,28 @@ The mosquitto subscription shows the messages as they passes through the broker:
 - the acknowledgement, referring to the original message and also with a signature
 
 ```bash
-myself {"payload": "a message", "tags": {"ack": {"id": "cb4cbc1a-87da-4220-a7c0-1ed935d5852f", "to": "/ack"}, "signature": {"hash": "mOxtp1SegeDbnNElqsvvRbV9sSs+oRyhHwHe05KyTsyRcI8dQ89xJXU6+TqdQhOZMupFC7TDZf8OXbfHVZVajpsiDc488spGtRI8YI34+SnSlbk/CkGhCW58OevpJYR4Oh08eAczW+ZfKDiEbg7qEQuNGdDABlzjR4V78B/mKpvT2qbmgpAlGx2xCm+eQPOVrmOTpBOqvotZBZEyc8+quaR/U+VwYA7+4D3HJfuiDgtiCF2iCkIv71Wx7bqxGquZqOomTqFGwHe1DLPaqII/DSNwl4hKXRUcNZpavcoYLtGxGBdjfMM45iVm1NqXGS9FTTtZyOIHRF8cYeU/EGfzeA==", "origin": "kibo.local", "ts": "2019-02-10 10:13:07.309281"}}}
-/ack {"payload": {}, "tags": {"ack": {"id": "cb4cbc1a-87da-4220-a7c0-1ed935d5852f"}, "signature": {"hash": "GJwEanfzsIds1SnhTeav/LHvDuTTLqzYafeb3Gpru2NLuNIsHgVbuGmJpVhbk7NEjBVLbonqtSSWqluuFhWkQj+fdg9i/5lfzI0AfmAZ0LqP8XslbJuYpNYCopbWORcxUn0yus5VXP5RZimRbfc5uc1MwFRlXQaJNjM0pYTEyyky+UTWpTWZZwDBPL8E+nXQmCPqLgHNGfpWaSM760j7FZbfggVMP/R4yr4HqYPDQqa7VtFMrOzGHFdpI563Go2CpdKqN89W4HmNijDliZt+z+a3IUqU5L81f/y1uzsp18CfHXk4IS13F0/EGwgrupYs28hFpaz9m3nds4aXhLJLLA==", "origin": "kibo.local", "ts": "2019-02-10 10:13:07.515296"}}}
+myself {"payload": "a message", "tags": {"ack": "/ack", "id": "abe527c6-14fd-414e-a43b-166ed2e84a34", "signature": {"hash": "MCRNn/SNXYK4yRxjms0qNZUpwDCEn0ad9wlvBZhyecmx+TI+IM6CaaGbjwE7usPpnbY2iALKrqksrNRWuIREgtxHlJ9fq6Sd4AvanEXwW1+exzKdPg7wMMNNSTmCgAfILFBsthho1NYrAFqt0AAphfLkgUy5Q4ybxv67ducHLYCZ0aOy5pqk/kqxfPWTBpi63ULqrT9ulMQLxraP29oj/nip60D7of4ff/bmLK5aTGInfdKXd/gnjM45zJCtU6RxkNKIP9UWLQFBEFFCn9CLVRW4DkSMpGNWaaktAD6fW641xH87IG1CdMWoeS9rLwHkeVGm+sbeV0yEeAinOFVuoA==", "origin": "kibo.local", "ts": "2019-02-10 16:49:01.208667"}}}
+/ack {"payload": {}, "tags": {"ack": "abe527c6-14fd-414e-a43b-166ed2e84a34", "id": "246c19fa-7755-4fed-b4d4-c48af1513faf", "signature": {"hash": "FjLJLE5RCN5O3qyOYRT7twgjprZdLvnusgxsGU+sWkz4hlqASftSkxezkvvY6tREDT7yi437Q/lB5TQcA6A6KJumvCsZoaRHbE/9sQNTXe0aYSqKt9rZLusdCwuny6ghnhpXg3IT06RQBlxwxNonjhMyb+OOecvG5nTr9o7zhs8bsHDOZhiDVs/RH8CfY9bJGuIGYkUg3bZ10Bou7A8Q3TDHMsnQV+jAYKGIt54cnmGFwW+Ep1t7Cf3gBehLT7b7EaCJLZufNpwTzDiUByAcyP6GPpn+DGDBX7gIzFxBXfzDE2QSerVjvA6eI+ejSmbogEr9uI/kV0YLNPuaRMWwbg==", "origin": "kibo.local", "ts": "2019-02-10 16:49:01.704390"}}}
 ```
 
 The MongoDB logging will show the following activity:
 
 ```bash
-2019-02-10 10:13:07.302 REMOVE    [keys] : {"_id": "kibo.local"}. 0 deleted.
-2019-02-10 10:13:07.303 INSERT    [keys] : 1 inserted.
-2019-02-10 10:13:07.307 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
-2019-02-10 10:13:07.308 QUERY     [messages] : {}. 0 returned.
-2019-02-10 10:13:07.309 INSERT    [messages] : 1 inserted.
-2019-02-10 10:13:07.311 INSERT    [messages] : 1 inserted.
-2019-02-10 10:13:07.311 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
-2019-02-10 10:13:07.312 REMOVE    [messages] : {"_id": ObjectId("5c5ff933e4e2ad8f1efd49f0")}. 1 deleted.
-2019-02-10 10:13:07.313 INSERT    [messages] : 1 inserted.
-2019-02-10 10:13:07.519 REMOVE    [messages] : {"_id": ObjectId("5c5ff933e4e2ad8f1efd49f2")}. 1 deleted.
-2019-02-10 10:13:07.520 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
-2019-02-10 10:13:07.521 REMOVE    [messages] : {"_id": ObjectId("5c5ff933e4e2ad8f1efd49f1")}. 1 deleted.
+2019-02-10 16:49:01.200 REMOVE    [keys] : {"_id": "kibo.local"}. 0 deleted.
+2019-02-10 16:49:01.201 INSERT    [keys] : 1 inserted.
+2019-02-10 16:49:01.206 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
+2019-02-10 16:49:01.207 QUERY     [messages] : {}. 0 returned.
+
+2019-02-10 16:49:01.208 INSERT    [messages] : 1 inserted.
+2019-02-10 16:49:01.211 INSERT    [messages] : 1 inserted.
+2019-02-10 16:49:01.213 REMOVE    [messages] : {"_id": ObjectId("5c6055fde4e2ade0a8d8bd44")}. 1 deleted.
+
+2019-02-10 16:49:01.339 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
+2019-02-10 16:49:01.704 INSERT    [messages] : 1 inserted.
+2019-02-10 16:49:01.706 REMOVE    [messages] : {"_id": ObjectId("5c6055fde4e2ade0a8d8bd46")}. 1 deleted.
+
+2019-02-10 16:49:01.707 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
+2019-02-10 16:49:01.763 REMOVE    [messages] : {"_id": ObjectId("5c6055fde4e2ade0a8d8bd45")}. 1 deleted.
 ```
 
 First some setup:
@@ -169,14 +174,14 @@ First some setup:
 Then the actual sending of the message:
 
 - an insertion for the message we want to send
-- and an insertion for the scheduled retry
+- an insertion for a retry
+- a removal of the sent message
 
 The message arrives and...
 
 - a query to fetch the public key is performed to validate the signature
-- the original message is removed (this is a delayed action that should have happened at the end of the sending of the message)
 - an acknowledging message is created
-- the (sent) acknowledgement is removed
+- the sent acknowledgement is removed
 
 Finally the acknowledgement arrives and...
 

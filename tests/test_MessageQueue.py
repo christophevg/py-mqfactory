@@ -1,6 +1,7 @@
 import time
 
-from mqfactory import Message, Threaded, MessageQueue
+from mqfactory         import Threaded, MessageQueue
+from mqfactory.message import Message
 
 def test_send_message(transport, message):
   mq = MessageQueue(transport)

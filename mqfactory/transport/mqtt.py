@@ -5,7 +5,7 @@ except ImportError:
 
 import paho.mqtt.client as mqtt
 
-from mqfactory import Message
+from mqfactory.message   import Message
 from mqfactory.transport import Transport
 
 class MQTTTransport(Transport):

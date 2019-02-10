@@ -1,4 +1,4 @@
-from mqfactory import Message
+from mqfactory.message import Message
 
 class MessageStore(object):
   def __init__(self, collection):

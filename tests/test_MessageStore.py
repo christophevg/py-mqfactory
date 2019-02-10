@@ -4,20 +4,20 @@ from mqfactory import MessageQueue
 
 from mqfactory.store import Persisting
 
-def test_store_actions(collection, transport):
+def test_store_actions(collection, transport, id_generator):
   mq = Persisting(
-         MessageQueue(transport),
+         MessageQueue(transport, id_generator=id_generator),
          into=collection
        )
-  mq.send("to 1", "payload 1")
-  mq.send("to 2", "payload 2")
+  mq.send("to 1", "load 1")
+  mq.send("to 2", "load 2")
   mq.process_entire_outbox()
 
   assert len(collection.changelog) == 5
   assert collection.changelog == [
     "load",
-    ("add",    "1", {"to": "to 1", "payload" : "payload 1", "tags" : {}}),
-    ("add",    "2", {"to": "to 2", "payload" : "payload 2", "tags" : {}}),
+    ("add",    "1", {"to": "to 1", "payload" : "load 1", "tags" : { "id" : 1 }}),
+    ("add",    "2", {"to": "to 2", "payload" : "load 2", "tags" : { "id" : 2 }}),
     ("remove", "1"),
     ("remove", "2")
   ]

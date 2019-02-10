@@ -30,7 +30,7 @@ def test_request_ack(transport, message):
 
   mq.process_outbox()
   assert len(transport.items) == 1
-  assert transport.items[0].tags["ack"]["to"] == "testing"
+  assert transport.items[0].tags["ack"] == "testing"
 
 def test_resend_without_ack(transport, message):
   mq = setup_mq(transport, tos=[False, True])
@@ -49,8 +49,7 @@ def test_receive_ack(transport, message):
   mq = setup_mq(transport, ack_channel="testing")
   mq.send(message.to, message.payload)
   mq.process_outbox()
-  id = mq.outbox.messages[0].tags["ack"]["id"]
-  ack = Message("testing", {}, { "ack" : { "id" : id } } )
+  ack = Message("testing", {}, { "ack" : mq.outbox.messages[0].tags["id"] } )
   transport.send(ack)
   transport.deliver()
 
@@ -63,11 +62,12 @@ def test_give_ack(transport, message):
     delivered.append(msg)
   mq.on_message("channel", accept)
 
-  msg = Message("channel", "payload")
-  msg.tags["ack"] = { "id" : "abc", "to": "ack" }
+  msg = Message("channel", "payload", id="abc")
+  msg.tags["ack"] = "acks"
   transport.send(msg)
   transport.deliver()
 
-  assert len(mq.outbox.messages) == 1
-  assert mq.outbox.messages[0].to == "ack"
-  assert mq.outbox.messages[0].tags == { "ack" : {"id" : "abc"} }
+  assert len(mq.outbox.messages)           == 1
+  assert mq.outbox.messages[0].to          == "acks"
+  assert mq.outbox.messages[0].payload     == {}
+  assert mq.outbox.messages[0].tags["ack"] == "abc"

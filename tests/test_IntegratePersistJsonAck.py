@@ -21,14 +21,14 @@ def mocked_clock():
   next_ts += 1000
   return next_ts
 
-def test_two_messages_with_retries_and_acks(transport, collection):
+def test_two_messages_with_retries_and_acks(transport, collection, id_generator):
   mq = JsonFormatting(
          Acknowledging(
            Persisting(
-             MessageQueue(transport),
+             MessageQueue(transport, id_generator=id_generator),
              into=collection
            ),
-           uid=mocked_uid, clock=mocked_clock,
+           clock=mocked_clock,
            timedout=mocked_to([False, False, True])
          )
        )
@@ -38,11 +38,12 @@ def test_two_messages_with_retries_and_acks(transport, collection):
   mq.process_outbox() # send 1, schedule retry 3
   assert collection.changelog == [
     'load',
-    ('add', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': {}}),
-    ('add', '2', {'to': 'to 2', 'payload': 'payload 2', 'tags': {}}),
+    ('add', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': { 'id': 1 }}),
+    ('add', '2', {'to': 'to 2', 'payload': 'payload 2', 'tags': { 'id': 2 }}),
     ('add', '3', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
+      'id': 1,
       'sent': 1000,
-      'ack': {'to': '/ack', 'id': 'uuid-1'}
+      'ack': '/ack'
     }}),
     ('remove', '1'),
   ]
@@ -54,7 +55,8 @@ def test_two_messages_with_retries_and_acks(transport, collection):
       json.dumps({
         "payload": "payload 1",
         "tags": { 
-          "ack": { "id": "uuid-1", "to": "/ack" },
+          "id" : 1,
+          "ack": "/ack"
         }
       }, sort_keys=True)
     )
@@ -63,8 +65,10 @@ def test_two_messages_with_retries_and_acks(transport, collection):
   mq.process_outbox() # send 2  schedule retry 5
   assert collection.changelog[5::] == [
     ('add', '5', {'to': 'to 2', 'payload': 'payload 2', 'tags': {
+      'id': 2,
       'sent': 2000,
-      'ack': {'to': '/ack', 'id': 'uuid-2'}}}),
+      'ack': '/ack'
+    }}),
     ('remove', '2')
   ]
 
@@ -74,8 +78,9 @@ def test_two_messages_with_retries_and_acks(transport, collection):
       "to 2",
       json.dumps({
         "payload": "payload 2",
-        "tags": { 
-          "ack": { "id": "uuid-2", "to": "/ack" },
+        "tags": {
+          "id": 2,
+          "ack": "/ack"
         }
       }, sort_keys=True)
     )
@@ -97,7 +102,9 @@ def test_two_messages_with_retries_and_acks(transport, collection):
   assert collection.changelog[7::] == [
     ('add', '7', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
       'sent': 3000,
-      'ack': {'to': '/ack', 'id': 'uuid-1'}}}),
+      'ack': '/ack',
+      'id': 1
+    }}),
     ('remove', '3')
   ]
 
@@ -108,26 +115,23 @@ def test_two_messages_with_retries_and_acks(transport, collection):
       json.dumps({
         "payload": "payload 1",
         "tags": {
+          "id": 1,
           "sent": 1000,
-          "ack": { "id": "uuid-1", "to": "/ack" },
-        }
+          "ack": "/ack"
+        },
       }, sort_keys=True)
     )
   ]
 
-  transport.deliver_direct(
-    "/ack",
-    json.dumps({ "tags" : { "ack" : { "id" : "uuid-1" } }})
-  ) # ack 1
+  # ack 1
+  transport.deliver_direct( "/ack", json.dumps({ "tags" : { "ack": 1 } }) )
 
   assert collection.changelog[9::] == [
     ('remove', '7')
   ]
-  
-  transport.deliver_direct(
-    "/ack",
-    json.dumps({ "tags" : { "ack" : { "id" : "uuid-2" } }})
-  ) # ack 2
+
+  # ack 2
+  transport.deliver_direct( "/ack", json.dumps({ "tags" : { "ack": 2 } }) )
 
   assert collection.changelog[10::] == [
     ('remove', '5')
