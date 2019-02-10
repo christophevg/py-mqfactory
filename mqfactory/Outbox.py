@@ -1,3 +1,5 @@
+import logging
+
 class Outbox(object):
   def __init__(self, mq=None):
     self.mq             = mq
@@ -34,7 +36,7 @@ class Outbox(object):
       for handler in self.after_defer:
         handler(self)
     except IndexError:
-      logging.warn("trying to defer message that now seems gone?")
+      logging.warning("trying to defer message that now seems gone?")
     return message
 
   def index(self, matches):
