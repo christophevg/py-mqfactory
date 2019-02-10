@@ -5,6 +5,7 @@ class Message(object):
     self.to      = to
     self.payload = payload
     self.tags    = tags or {}
+    self.private = {}
 
   def copy(self):
     return Message(

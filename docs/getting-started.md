@@ -130,31 +130,34 @@ And run the demo script:
 
 ```bash
 (venv) $ python demo.py 
-received a message from myself, tagged with {u'ack': {u'to': u'/ack', u'id': u'c8e122e8-0686-4555-9850-01b747f3831b'}, u'id': u'5c5f263de4e2ad806ec7615b'}
+received a message from myself, tagged with {u'ack': {u'to': u'/ack', u'id': u'cb4cbc1a-87da-4220-a7c0-1ed935d5852f'}}
 ```
 
-The mosquitto subscription shows the message as it passes through the broker:
+The mosquitto subscription shows the messages as they passes through the broker:
+
+- the actual message, with acknowledge request and signature
+- the acknowledgement, referring to the original message and also with a signature
 
 ```bash
-myself {"payload": "a message", "tags": {"ack": {"id": "c8e122e8-0686-4555-9850-01b747f3831b", "to": "/ack"}, "id": "5c5f263de4e2ad806ec7615b", "signature": {"hash": "K99vUO9/v6GuMX3tzV7QyKM/wKr6Qr0rb01jf1Q4N0M2p9YbWL8C54NU4YyHfXsDRrTFchlvqv5bhOui33YASJXU6AU/B2J5rWAs5KfbLVkGXj/VXWVbzdXvD3Lw6dehtGtTM9ZA+gDkj+pt5aDNqZ5es8mysB2TqpqMLF6iI9aMjLuPyv2iQ1QpOO+5BBU/zEkmL3dh1cdwks52wvtr6qMxrjVWbOynaevqTs0GXdYEQIRh602SFMIBOo08xxY6ukrFCxOHxEcBZS1UfpHASahx26Jmgj6YrCfehF18r3FDmi1Pq+2n7OBWeicHwFUa6y39gs+BATypwROBfucCKw==", "origin": "kibo.local", "ts": "2019-02-09 19:13:02.050718"}}}
-/ack {"payload": {}, "tags": {"ack": {"id": "c8e122e8-0686-4555-9850-01b747f3831b"}, "id": "5c5f263ee4e2ad806ec7615d", "signature": {"hash": "2a78BDhdb39QEoDW+Xv/IuRcGw/ovNrKK50+vBaA9jHG/1LMdqoa/L7ANoVsVJh/1mLzg+tXzP0cuFFAL4JezQzMAh5siqW7WAV+rCYwajFB23Y0zT9l7jC805F+CD99ugkePI0cfPujivRNR6ti1Q+jVmkk0hGdZR+r9dDemlm1n72nlqrzEAPxyY4u6tU1gJk5AJudTDbjlHkFpgRuvD7qqrmty1nv1PgdADRrPBcSb0JJ+NDkhlkZN7u8a8+/hpzyfBe69SEpQgZFnjfCqdDFF8Oh+beKe8v1AKg6EQcaJs92cIn/weojSAlMAAQhV8uB4uJ2Xfi+WqTZjp77Iw==", "origin": "kibo.local", "ts": "2019-02-09 19:13:02.260316"}}}
+myself {"payload": "a message", "tags": {"ack": {"id": "cb4cbc1a-87da-4220-a7c0-1ed935d5852f", "to": "/ack"}, "signature": {"hash": "mOxtp1SegeDbnNElqsvvRbV9sSs+oRyhHwHe05KyTsyRcI8dQ89xJXU6+TqdQhOZMupFC7TDZf8OXbfHVZVajpsiDc488spGtRI8YI34+SnSlbk/CkGhCW58OevpJYR4Oh08eAczW+ZfKDiEbg7qEQuNGdDABlzjR4V78B/mKpvT2qbmgpAlGx2xCm+eQPOVrmOTpBOqvotZBZEyc8+quaR/U+VwYA7+4D3HJfuiDgtiCF2iCkIv71Wx7bqxGquZqOomTqFGwHe1DLPaqII/DSNwl4hKXRUcNZpavcoYLtGxGBdjfMM45iVm1NqXGS9FTTtZyOIHRF8cYeU/EGfzeA==", "origin": "kibo.local", "ts": "2019-02-10 10:13:07.309281"}}}
+/ack {"payload": {}, "tags": {"ack": {"id": "cb4cbc1a-87da-4220-a7c0-1ed935d5852f"}, "signature": {"hash": "GJwEanfzsIds1SnhTeav/LHvDuTTLqzYafeb3Gpru2NLuNIsHgVbuGmJpVhbk7NEjBVLbonqtSSWqluuFhWkQj+fdg9i/5lfzI0AfmAZ0LqP8XslbJuYpNYCopbWORcxUn0yus5VXP5RZimRbfc5uc1MwFRlXQaJNjM0pYTEyyky+UTWpTWZZwDBPL8E+nXQmCPqLgHNGfpWaSM760j7FZbfggVMP/R4yr4HqYPDQqa7VtFMrOzGHFdpI563Go2CpdKqN89W4HmNijDliZt+z+a3IUqU5L81f/y1uzsp18CfHXk4IS13F0/EGwgrupYs28hFpaz9m3nds4aXhLJLLA==", "origin": "kibo.local", "ts": "2019-02-10 10:13:07.515296"}}}
 ```
 
 The MongoDB logging will show the following activity:
 
 ```bash
-2019-02-09 19:13:01.895 REMOVE    [keys] : {"_id": "kibo.local"}. 0 deleted.
-2019-02-09 19:13:01.941 INSERT    [keys] : 1 inserted.
-2019-02-09 19:13:01.946 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
-2019-02-09 19:13:01.947 QUERY     [messages] : {}. 0 returned.
-2019-02-09 19:13:01.987 INSERT    [messages] : 1 inserted.
-2019-02-09 19:13:02.055 INSERT    [messages] : 1 inserted.
-2019-02-09 19:13:02.057 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
-2019-02-09 19:13:02.058 INSERT    [messages] : 1 inserted.
-2019-02-09 19:13:02.059 REMOVE    [messages] : {"_id": ObjectId("5c5f263de4e2ad806ec7615b")}. 1 deleted.
-2019-02-09 19:13:02.264 REMOVE    [messages] : {"_id": ObjectId("5c5f263ee4e2ad806ec7615d")}. 1 deleted.
-2019-02-09 19:13:02.265 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
-2019-02-09 19:13:02.267 REMOVE    [messages] : {"_id": ObjectId("5c5f263ee4e2ad806ec7615c")}. 1 deleted.
+2019-02-10 10:13:07.302 REMOVE    [keys] : {"_id": "kibo.local"}. 0 deleted.
+2019-02-10 10:13:07.303 INSERT    [keys] : 1 inserted.
+2019-02-10 10:13:07.307 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
+2019-02-10 10:13:07.308 QUERY     [messages] : {}. 0 returned.
+2019-02-10 10:13:07.309 INSERT    [messages] : 1 inserted.
+2019-02-10 10:13:07.311 INSERT    [messages] : 1 inserted.
+2019-02-10 10:13:07.311 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
+2019-02-10 10:13:07.312 REMOVE    [messages] : {"_id": ObjectId("5c5ff933e4e2ad8f1efd49f0")}. 1 deleted.
+2019-02-10 10:13:07.313 INSERT    [messages] : 1 inserted.
+2019-02-10 10:13:07.519 REMOVE    [messages] : {"_id": ObjectId("5c5ff933e4e2ad8f1efd49f2")}. 1 deleted.
+2019-02-10 10:13:07.520 QUERY     [keys] : {"_id": "kibo.local"}. 1 returned.
+2019-02-10 10:13:07.521 REMOVE    [messages] : {"_id": ObjectId("5c5ff933e4e2ad8f1efd49f1")}. 1 deleted.
 ```
 
 First some setup:
@@ -171,8 +174,8 @@ Then the actual sending of the message:
 The message arrives and...
 
 - a query to fetch the public key is performed to validate the signature
-- an acknowledging message is created
 - the original message is removed (this is a delayed action that should have happened at the end of the sending of the message)
+- an acknowledging message is created
 - the (sent) acknowledgement is removed
 
 Finally the acknowledgement arrives and...

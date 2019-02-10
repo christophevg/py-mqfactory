@@ -3,7 +3,7 @@ from mqfactory.Outbox import Outbox
 def test_append_and_pop():
   tracker = []
   def track_append(outbox):
-    tracker.append(outbox.items[-1])
+    tracker.append(outbox.messages[-1])
 
   def track_pop(outbox, index, item):
     tracked_item = tracker.pop(index)

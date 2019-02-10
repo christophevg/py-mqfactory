@@ -42,7 +42,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
     ('add', '2', {'to': 'to 2', 'payload': 'payload 2', 'tags': {}}),
     ('add', '3', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
       'sent': 1000,
-      'id': '1',
       'ack': {'to': '/ack', 'id': 'uuid-1'}
     }}),
     ('remove', '1'),
@@ -56,7 +55,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
         "payload": "payload 1",
         "tags": { 
           "ack": { "id": "uuid-1", "to": "/ack" },
-          "id": "1"
         }
       }, sort_keys=True)
     )
@@ -66,7 +64,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
   assert collection.changelog[5::] == [
     ('add', '5', {'to': 'to 2', 'payload': 'payload 2', 'tags': {
       'sent': 2000,
-      'id': '2',
       'ack': {'to': '/ack', 'id': 'uuid-2'}}}),
     ('remove', '2')
   ]
@@ -79,7 +76,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
         "payload": "payload 2",
         "tags": { 
           "ack": { "id": "uuid-2", "to": "/ack" },
-          "id": "2"
         }
       }, sort_keys=True)
     )
@@ -101,7 +97,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
   assert collection.changelog[7::] == [
     ('add', '7', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
       'sent': 3000,
-      'id': '3',
       'ack': {'to': '/ack', 'id': 'uuid-1'}}}),
     ('remove', '3')
   ]
@@ -114,7 +109,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
         "payload": "payload 1",
         "tags": {
           "sent": 1000,
-          "id": "3",
           "ack": { "id": "uuid-1", "to": "/ack" },
         }
       }, sort_keys=True)
@@ -139,6 +133,6 @@ def test_two_messages_with_retries_and_acks(transport, collection):
     ('remove', '5')
   ]
 
-  assert len(mq.outbox.items) == 0
+  assert len(mq.outbox.messages) == 0
   assert len(collection.items) == 0
   assert len(transport.log) == 3

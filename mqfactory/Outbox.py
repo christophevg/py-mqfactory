@@ -1,7 +1,7 @@
 class Outbox(object):
   def __init__(self, mq=None):
     self.mq             = mq
-    self.items          = []
+    self.messages       = []
     self.before_append  = []
     self.after_append   = []
     self.before_pop     = []
@@ -10,41 +10,39 @@ class Outbox(object):
     self.after_defer    = []
     self.before_getnext = []
 
-  def append(self, item):
+  def append(self, message):
     for handler in self.before_append:
-      item = handler(self, item)
-    self.items.append(item)
+      message = handler(self, message)
+    self.messages.append(message)
     for handler in self.after_append:
-      item = handler(self)
+      message = handler(self)
 
   def pop(self, index=0):
     for handler in self.before_pop:
       handler(self, index)
-    item = self.items.pop(index)
+    message = self.messages.pop(index)
     for handler in self.after_pop:
-      handler(self, index, item)
-    return item
+      handler(self, index, message)
+    return message
 
   def defer(self, index=0):
     for handler in self.before_defer:
       handler(self, index)
-    item = None
+    message = None
     try:
-      item = self.items.append(self.items.pop(index))
+      message = self.messages.append(self.messages.pop(index))
       for handler in self.after_defer:
         handler(self)
     except IndexError:
-      # TODO fix this race condition, when a defer of a retry is done while
-      #      acknowledgement arrives and removes the item before this runs
-      pass
-    return item
+      logging.warn("trying to defer message that now seems gone?")
+    return message
 
   def index(self, matches):
-    item = next((x for x in self.items if matches(x)), [None])
-    return self.items.index(item)
+    message = next((x for x in self.messages if matches(x)), [None])
+    return self.messages.index(message)
 
   def __len__(self):
-    return len(self.items)
+    return len(self.messages)
 
   def __iter__(self):
     return self
@@ -56,6 +54,6 @@ class Outbox(object):
     for handler in self.before_getnext:
       handler(self)
     try:
-      return self.items[0]
+      return self.messages[0]
     except IndexError:
       raise StopIteration

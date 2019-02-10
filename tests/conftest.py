@@ -9,6 +9,7 @@ class RandomMessage(object):
     self.to      = generate_random_string()
     self.payload = generate_random_string()
     self.tags    = {}
+    self.private = {}
 
   def copy(self):
     c = RandomMessage()
