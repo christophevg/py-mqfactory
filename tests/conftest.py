@@ -33,3 +33,11 @@ def id_generator():
     return generator.id
   generator.id = 0
   return generator
+
+@pytest.fixture
+def clock():
+  def generator():
+    generator.id += 1
+    return generator.id
+  generator.id = 0
+  return generator
