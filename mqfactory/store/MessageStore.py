@@ -26,8 +26,7 @@ class MessageStore(object):
   def load_messages(self, outbox):
     if not self.loaded:
       for doc in self.collection.load():
-        message = Message(doc["to"], doc["payload"])
-        # TODO load tags?
+        message = Message(doc["to"], doc["payload"], doc["tags"])
         message.private["id"] = doc["_id"]
         outbox.messages[message.id] = message
       self.loaded = True
