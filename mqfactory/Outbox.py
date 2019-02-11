@@ -53,8 +53,12 @@ class Outbox(object):
       handler(self)
     if len(self.messages) < 1:
       raise StopIteration
-    message = min(self.messages.values(),key=lambda msg: msg.tags["last"])
-    return message
+    try:
+      message = min(self.messages.values(),key=lambda msg: msg.tags["last"])
+      return message
+    except KeyError:
+      logging.error("missing last tag : {0}".format(self.messages))
+      raise StopIteration
 
   def __getitem__(self, id):
     message = self.messages[id]
