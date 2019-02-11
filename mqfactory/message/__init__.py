@@ -9,6 +9,10 @@ class Message(object):
     self.private    = {}
     self.tags["id"] = id or str(uuid.uuid4())
 
+  @property
+  def id(self):
+    return self.tags["id"]
+
   def copy(self):
     return Message(
       self.to,
