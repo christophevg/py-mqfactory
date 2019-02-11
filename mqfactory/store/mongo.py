@@ -54,5 +54,4 @@ class MongoCollection(Collection):
       id = ObjectId(id)
     except:
       pass
-    doc.pop("_id")
     self.collection.update_one({"_id" : id}, {"$set" : doc})
