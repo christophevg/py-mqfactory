@@ -61,9 +61,8 @@ class Acknowledgement(object):
     try:
       self.mq.outbox.remove(self.mq.outbox[message.tags["ack"]])
       logging.debug("popped acked msg {0}".format(message.tags["ack"]))
-    except ValueError:
+    except KeyError:
       logging.warn("unknown message ack {0}".format(message.tags["ack"]))
-      sys.exit(1)
 
 def Acknowledging(mq, ack=None, clock=millis, timedout=check_timeout):
   acknowledgement = ack or Acknowledgement(mq, clock=clock, timedout=timedout)
