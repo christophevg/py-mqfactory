@@ -9,6 +9,7 @@ def test_message_as_dictionary(message):
 
 def test_ensure_id_is_available(message):
   assert "id" in message.tags
+  assert message.id == message.tags["id"]
 
 def test_copy_is_correct_and_not_same_object(message):
   dup = message.copy()

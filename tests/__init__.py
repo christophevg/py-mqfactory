@@ -77,6 +77,10 @@ class CollectionMock(Collection):
     self.changelog.append(("remove", id))
     self.items.pop(id)
 
+  def update(self, id, item):
+    self.changelog.append(("update", id, copy.deepcopy(dict(item))))
+    self.items[id] = item
+
 
 class PahoMock(object):
   on_connect    = None

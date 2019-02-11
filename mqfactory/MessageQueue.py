@@ -24,10 +24,10 @@ def NoneGenerator():
   return None
 
 class MessageQueue(object):
-  def __init__(self, transport, id_generator=NoneGenerator):
+  def __init__(self, transport, id_generator=NoneGenerator, clock=None):
     self.transport        = transport
     self.id_generator     = id_generator
-    self.outbox           = Outbox(self)
+    self.outbox           = Outbox(self, clock=clock)
     self.before_sending   = []
     self.after_sending    = []
     self.before_handling  = []
@@ -36,7 +36,7 @@ class MessageQueue(object):
 
   def send(self, to, payload, tags=None):
     msg = Message(to, payload, tags, id=self.id_generator())
-    self.outbox.append(msg)
+    self.outbox.add(msg)
 
   def process_entire_outbox(self):
     try:
@@ -46,24 +46,24 @@ class MessageQueue(object):
       pass
 
   def process_outbox(self):
-    msg = next(self.outbox)
+    message = next(self.outbox)
     try:
-      wrap(msg, self.before_sending)
-      self.transport.send(msg)
-      wrap(msg, self.after_sending)
-      self.outbox.pop()
+      wrap(message, self.before_sending) # defer here avoids sending
+      self.transport.send(message)
+      wrap(message, self.after_sending)  # defer here avoids deletion
+      self.outbox.remove(message)
     except DeferException:
-      self.outbox.defer()
+      self.outbox.defer(message)         # defer will put msg at end of queue
     except Exception as e:
-      logging.warning("sending failed: {0}".format(str(e)))
+      logging.warning("sending of {0} failed: {1}".format(str(message), str(e)))
       logging.exception("message")
 
   def on_message(self, to, handler):
-    def wrapped_handler(msg):
+    def wrapped_handler(message):
       try:
-        wrap(msg, self.before_handling[::-1])
-        handler(msg)
-        wrap(msg, self.after_handling[::-1])
+        wrap(message, self.before_handling[::-1])
+        handler(message)
+        wrap(message, self.after_handling[::-1])
       except Exception as e:
         logging.error(str(e))
     self.transport.on_message(to, wrapped_handler)

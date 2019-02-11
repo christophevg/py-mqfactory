@@ -19,8 +19,11 @@ def mocked_to(answers=[]):
       return False
   return f
 
-def setup_mq(transport, tos=[], ack_channel="testing"):
-  mq  = MessageQueue(transport)
+def setup_mq(transport, tos=[], ack_channel="testing", id_generator=None):
+  if not id_generator is None:
+    mq = MessageQueue(transport, id_generator=id_generator)
+  else:
+    mq = MessageQueue(transport)
   ack = Acknowledgement(mq, timedout=mocked_to(tos), ack_channel=ack_channel)
   return Acknowledging(mq, ack=ack)
 
@@ -37,7 +40,7 @@ def test_resend_without_ack(transport, message):
   mq.send(message.to, message.payload)
 
   mq.process_outbox() # send
-  assert len(mq.outbox.messages) == 1
+  assert len(mq.outbox) == 1
 
   mq.process_outbox() # defer
   assert len(transport.items) == 1
@@ -49,17 +52,16 @@ def test_receive_ack(transport, message):
   mq = setup_mq(transport, ack_channel="testing")
   mq.send(message.to, message.payload)
   mq.process_outbox()
-  ack = Message("testing", {}, { "ack" : mq.outbox.messages[0].tags["id"] } )
+  ack = Message("testing", {}, { "ack" : next(mq.outbox).id } )
   transport.send(ack)
   transport.deliver()
 
-  assert len(mq.outbox.messages) == 0
+  assert len(mq.outbox) == 0
 
-def test_give_ack(transport, message):
-  mq = setup_mq(transport)
-  delivered = []
+def test_give_ack(transport, message, id_generator):
+  mq = setup_mq(transport, id_generator=id_generator)
   def accept(msg):
-    delivered.append(msg)
+    pass
   mq.on_message("channel", accept)
 
   msg = Message("channel", "payload", id="abc")
@@ -68,6 +70,6 @@ def test_give_ack(transport, message):
   transport.deliver()
 
   assert len(mq.outbox.messages)           == 1
-  assert mq.outbox.messages[0].to          == "acks"
-  assert mq.outbox.messages[0].payload     == {}
-  assert mq.outbox.messages[0].tags["ack"] == "abc"
+  assert mq.outbox.messages[1].to          == "acks"
+  assert mq.outbox.messages[1].payload     == {}
+  assert mq.outbox.messages[1].tags["ack"] == "abc"

@@ -21,11 +21,11 @@ def mocked_clock():
   next_ts += 1000
   return next_ts
 
-def test_two_messages_with_retries_and_acks(transport, collection, id_generator):
+def test_two_messages_with_retries_and_acks(transport, collection, id_generator, clock):
   mq = JsonFormatting(
          Acknowledging(
            Persisting(
-             MessageQueue(transport, id_generator=id_generator),
+             MessageQueue(transport, id_generator=id_generator, clock=clock),
              into=collection
            ),
            clock=mocked_clock,
@@ -34,18 +34,26 @@ def test_two_messages_with_retries_and_acks(transport, collection, id_generator)
        )
   mq.send("to 1", "payload 1")
   mq.send("to 2", "payload 2")
-
-  mq.process_outbox() # send 1, schedule retry 3
   assert collection.changelog == [
     'load',
-    ('add', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': { 'id': 1 }}),
-    ('add', '2', {'to': 'to 2', 'payload': 'payload 2', 'tags': { 'id': 2 }}),
-    ('add', '3', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
+    ('add', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
       'id': 1,
-      'sent': 1000,
-      'ack': '/ack'
+      'last': 1
     }}),
-    ('remove', '1'),
+    ('add', '2', {'to': 'to 2', 'payload': 'payload 2', 'tags': {
+      'id': 2,
+      'last': 2
+    }})
+  ]
+
+  mq.process_outbox() # send 1 and update with sent time
+  assert collection.changelog[3::] == [
+    ('update', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
+      'id': 1,
+      'last': 3,
+      'ack': '/ack',
+      'sent': 1000
+    }})
   ]
 
   transport.deliver()
@@ -56,20 +64,21 @@ def test_two_messages_with_retries_and_acks(transport, collection, id_generator)
         "payload": "payload 1",
         "tags": { 
           "id" : 1,
+          "last": 1,
           "ack": "/ack"
         }
       }, sort_keys=True)
     )
   ]  
   
-  mq.process_outbox() # send 2  schedule retry 5
-  assert collection.changelog[5::] == [
-    ('add', '5', {'to': 'to 2', 'payload': 'payload 2', 'tags': {
+  mq.process_outbox() # send 2 and update with sent time
+  assert collection.changelog[4::] == [
+    ('update', '2', {'to': 'to 2', 'payload': 'payload 2', 'tags': {
       'id': 2,
+      'last': 4,
       'sent': 2000,
       'ack': '/ack'
-    }}),
-    ('remove', '2')
+    }})
   ]
 
   transport.deliver()
@@ -80,14 +89,23 @@ def test_two_messages_with_retries_and_acks(transport, collection, id_generator)
         "payload": "payload 2",
         "tags": {
           "id": 2,
+          "last" : 2,
           "ack": "/ack"
         }
       }, sort_keys=True)
     )
   ]  
 
-  mq.process_outbox() # defer 1
-  assert len(collection.changelog) == 7
+  mq.process_outbox() # defer 1 due to no timeout
+  assert collection.changelog[5::] == [
+    ('update', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
+      'id': 1,
+      'last': 5,
+      'sent': 1000,
+      'ack': '/ack'
+    }})
+  ]
+  assert len(collection.changelog) == 6
 
   transport.deliver()
   assert len(transport.log) == 2
@@ -98,14 +116,14 @@ def test_two_messages_with_retries_and_acks(transport, collection, id_generator)
   transport.deliver()
   assert len(transport.log) == 2
 
-  mq.process_outbox() # timeout 1, send 3, schedule retry 7
+  mq.process_outbox() # timeout 1, send it again, update sent time
   assert collection.changelog[7::] == [
-    ('add', '7', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
+    ('update', '1', {'to': 'to 1', 'payload': 'payload 1', 'tags': {
+      "last" : 7,
       'sent': 3000,
       'ack': '/ack',
       'id': 1
-    }}),
-    ('remove', '3')
+    }})
   ]
 
   transport.deliver()
@@ -116,6 +134,7 @@ def test_two_messages_with_retries_and_acks(transport, collection, id_generator)
         "payload": "payload 1",
         "tags": {
           "id": 1,
+          "last": 5,
           "sent": 1000,
           "ack": "/ack"
         },
@@ -126,15 +145,15 @@ def test_two_messages_with_retries_and_acks(transport, collection, id_generator)
   # ack 1
   transport.deliver_direct( "/ack", json.dumps({ "tags" : { "ack": 1 } }) )
 
-  assert collection.changelog[9::] == [
-    ('remove', '7')
+  assert collection.changelog[8::] == [
+    ('remove', '1')
   ]
 
   # ack 2
   transport.deliver_direct( "/ack", json.dumps({ "tags" : { "ack": 2 } }) )
 
-  assert collection.changelog[10::] == [
-    ('remove', '5')
+  assert collection.changelog[9::] == [
+    ('remove', '2')
   ]
 
   assert len(mq.outbox.messages) == 0

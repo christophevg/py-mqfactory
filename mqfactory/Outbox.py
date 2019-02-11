@@ -1,61 +1,63 @@
 import logging
 
+from mqfactory import millis
+
 class Outbox(object):
-  def __init__(self, mq=None):
-    self.mq             = mq
-    self.messages       = []
-    self.before_append  = []
-    self.after_append   = []
-    self.before_pop     = []
-    self.after_pop      = []
-    self.before_defer   = []
-    self.after_defer    = []
-    self.before_getnext = []
+  def __init__(self, mq=None, clock=None):
+    self.mq            = mq
+    self.clock         = clock or millis
+    self.messages      = {}
+    self.before_add    = []
+    self.after_add     = []
+    self.before_remove = []
+    self.after_remove  = []
+    self.before_defer  = []
+    self.after_defer   = []
+    self.before_get    = []
 
-  def append(self, message):
-    for handler in self.before_append:
-      message = handler(self, message)
-    self.messages.append(message)
-    for handler in self.after_append:
-      message = handler(self)
+  def add(self, message):
+    for handler in self.before_add:
+      handler(self, message)
+    self.messages[message.id] = message
+    message.tags["last"] = self.clock()
+    for handler in self.after_add:
+      handler(self, message)
 
-  def pop(self, index=0):
-    for handler in self.before_pop:
-      handler(self, index)
-    message = self.messages.pop(index)
-    for handler in self.after_pop:
-      handler(self, index, message)
+  def remove(self, message):
+    for handler in self.before_remove:
+      handler(self, message)
+    del self.messages[message.id]
+    for handler in self.after_remove:
+      handler(self, message)
     return message
 
-  def defer(self, index=0):
+  def defer(self, message):
     for handler in self.before_defer:
-      handler(self, index)
-    message = None
-    try:
-      message = self.messages.append(self.messages.pop(index))
-      for handler in self.after_defer:
-        handler(self)
-    except IndexError:
-      logging.warning("trying to defer message that now seems gone?")
+      handler(self, message)
+    message.tags["last"] = self.clock()
+    for handler in self.after_defer:
+      handler(self, message)
     return message
-
-  def index(self, matches):
-    message = next((x for x in self.messages if matches(x)), [None])
-    return self.messages.index(message)
 
   def __len__(self):
     return len(self.messages)
 
   def __iter__(self):
-    return self
+    return self  # pragma: no cover
   
   def next(self):
-    return self.__next__()
+    return self.__next__() # pragma: no cover
   
   def __next__(self):
-    for handler in self.before_getnext:
+    for handler in self.before_get:
       handler(self)
-    try:
-      return self.messages[0]
-    except IndexError:
+    if len(self.messages) < 1:
       raise StopIteration
+    message = min(self.messages.values(),key=lambda msg: msg.tags["last"])
+    return message
+
+  def __getitem__(self, id):
+    message = self.messages[id]
+    for handler in self.before_get:
+      handler(self, message)
+    return message

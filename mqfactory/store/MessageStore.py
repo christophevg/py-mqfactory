@@ -5,29 +5,29 @@ class MessageStore(object):
     self.collection = collection
     self.loaded = False
 
-  def before_append(self, outbox, message):
+  def before_add(self, outbox, message):
     self.load_messages(outbox)
-    return message
 
-  def after_append(self, outbox):
-    message = outbox.messages[-1]
+  def after_add(self, outbox, message):
     message.private["id"] = self.collection.add(dict(message))
-    return message
 
-  def before_pop(self, outbox, index):
+  def before_remove(self, outbox, message):
     self.load_messages(outbox)
 
-  def after_pop(self, outbox, index, message):
+  def after_remove(self, outbox, message):
     self.collection.remove(message.private["id"])
-    return (index, message)
     
-  def before_getnext(self, outbox):
+  def before_get(self, outbox, message=None):
     self.load_messages(outbox)
+
+  def after_defer(self, outbox, message):
+    self.collection.update(message.private["id"], dict(message))
 
   def load_messages(self, outbox):
     if not self.loaded:
       for doc in self.collection.load():
         message = Message(doc["to"], doc["payload"])
+        # TODO load tags?
         message.private["id"] = doc["_id"]
-        outbox.messages.append(message)
+        outbox.messages[message.id] = message
       self.loaded = True

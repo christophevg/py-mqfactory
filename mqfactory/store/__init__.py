@@ -15,17 +15,22 @@ class Collection(object):
   def remove(self, item):
     raise NotImplementedError("implement removing item from the collection")
 
+  def update(self, key, item):
+    raise NotImplementedError("implement updating item in the collection")
+
 from mqfactory.store.MessageStore import MessageStore
 
 def Persisting(mq, into=Collection()):
   store = MessageStore(into)
 
-  mq.outbox.before_append.append(store.before_append)
-  mq.outbox.after_append.append(store.after_append)
+  mq.outbox.before_add.append(store.before_add)
+  mq.outbox.after_add.append(store.after_add)
 
-  mq.outbox.before_pop.append(store.before_pop)
-  mq.outbox.after_pop.append(store.after_pop)
+  mq.outbox.before_remove.append(store.before_remove)
+  mq.outbox.after_remove.append(store.after_remove)
   
-  mq.outbox.before_getnext.append(store.before_getnext)
+  mq.outbox.after_defer.append(store.after_defer)
+  
+  mq.outbox.before_get.append(store.before_get)
 
   return mq

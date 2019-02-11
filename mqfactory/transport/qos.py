@@ -29,36 +29,37 @@ class Acknowledgement(object):
     self.clock = clock
     self.mq.on_message(self.ack_channel, self.handle)
     
-  def request(self, message):
-    # add the "ack" tag to request an acknowledgement
+  def request_and_wait(self, message):
+    # don't do anything special for ack messages
+    if message.to == self.ack_channel: return
+
+    # add the "ack" tag to request an acknowledgement and continue sending it
     if not "ack" in message.tags:
       message.tags["ack"] = self.ack_channel
-      logging.debug("requesting ack for {0}".format(message.tags["id"]))
+      logging.debug("requesting ack for {0}".format(message.id))
     else:
-      # if the ack tag was already added, we might want to resend it
+      # the ack tag is present, so this message was sent already at least once
+      # check for timeout and let it be sent again, or Defer until timeout
       if not self.timedout(message):
         raise DeferException
 
-  def wait(self, message):
-    # don't add retry for acknowledgements themselves
-    if not message.to == self.ack_channel:
-      retry = message.copy()
-      retry.tags["sent"] = self.clock()
-      logging.debug("scheduling retry for {0}".format(retry.tags["id"]))
-      self.mq.outbox.append(retry)
+  def record_sent_time(self, message):
+    # don't do anything special for ack messages, simple let it be deleted
+    if message.to == self.ack_channel: return
+    # record sent time
+    message.tags["sent"] = self.clock()
+    logging.debug("scheduling retry for {0}".format(message.id))
+    raise DeferException
 
   def give(self, message):
     if "ack" in message.tags and not message.to == self.ack_channel:
-      logging.debug("acknowledging {0}".format(message.tags["id"]))
-      self.mq.send( message.tags["ack"], {}, { "ack" : message.tags["id"] } )
+      logging.debug("acknowledging {0}".format(message.id))
+      self.mq.send( message.tags["ack"], {}, { "ack" : message.id } )
 
   def handle(self, message):
     logging.debug("received ack for {0}".format(message.tags["ack"]))
-    def acked_message(m):
-      return m.tags["id"] == message.tags["ack"]
-
     try:
-      self.mq.outbox.pop(self.mq.outbox.index(acked_message))
+      self.mq.outbox.remove(self.mq.outbox[message.tags["ack"]])
       logging.debug("popped acked msg {0}".format(message.tags["ack"]))
     except ValueError:
       logging.warn("unknown message ack {0}".format(message.tags["ack"]))
@@ -66,7 +67,7 @@ class Acknowledgement(object):
 
 def Acknowledging(mq, ack=None, clock=millis, timedout=check_timeout):
   acknowledgement = ack or Acknowledgement(mq, clock=clock, timedout=timedout)
-  mq.before_sending.append(acknowledgement.request)
-  mq.after_sending.append(acknowledgement.wait)
+  mq.before_sending.append(acknowledgement.request_and_wait)
+  mq.after_sending.append(acknowledgement.record_sent_time)
   mq.after_handling.append(acknowledgement.give)
   return mq
