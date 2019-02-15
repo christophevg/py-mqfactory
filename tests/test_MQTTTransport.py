@@ -2,19 +2,14 @@ import pytest
 
 from mqfactory.transport.mqtt import MQTTTransport
 
-from . import PahoMock, PahoMessageMock
+from .conftest import PahoMessageMock
 
-def create_transport(uri="mqtt://localmock:1883", id="", qos=0):
-  paho = PahoMock()
-  transport = MQTTTransport(uri, paho=paho, id=id, qos=qos)
-  return (paho, transport)
-
-def test_client_id():
-  (paho, transport) = create_transport(id="test")
+def test_client_id(paho):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho, id="test")
   assert paho.client_id == "test"
 
-def test_connection_and_disconnection():
-  (paho, transport) = create_transport("mqtt://localmock:1883")
+def test_connection_and_disconnection(paho):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho)
   assert not paho.connected
   assert not transport.connected
   transport.connect()
@@ -27,8 +22,8 @@ def test_connection_and_disconnection():
   assert not transport.connected
   assert not paho.connected
 
-def test_subscription_on_connect(message):
-  (paho, transport) = create_transport()
+def test_subscription_on_connect(paho, message):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho)
   received = []
   def receive(msg):
     received.append(msg)
@@ -45,27 +40,27 @@ def test_subscription_on_connect(message):
   assert received[0].to == message.to
   assert received[0].payload == message.payload
 
-def test_send_fails_before_connect(message):
-  (paho, transport) = create_transport()
+def test_send_fails_before_connect(paho, message):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho)
   with pytest.raises(AssertionError):
     transport.send(message)
 
-def test_sending(message):
-  (paho, transport) = create_transport()
+def test_sending(paho, message):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho)
   transport.connect()
   transport.send(message)
   assert len(paho.queue) == 1
   assert paho.queue[0] == (message.to, message.payload, 0, False)
 
-def test_sending_with_qos(message):
-  (paho, transport) = create_transport(qos=1)
+def test_sending_with_qos(paho, message):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho, qos=1)
   transport.connect()
   transport.send(message)
   assert len(paho.queue) == 1
   assert paho.queue[0] == (message.to, message.payload, 1, False)
 
-def test_delivery(message):
-  (paho, transport) = create_transport(qos=1)
+def test_delivery(paho, message):
+  transport = MQTTTransport("mqtt://localmock:1883", paho=paho)
   received = []
   def receive(msg):
     received.append(msg)

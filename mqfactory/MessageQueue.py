@@ -3,8 +3,9 @@ import logging
 
 from threading import Thread
 
+from mqfactory         import wrap
 from mqfactory.message import Message
-from mqfactory.Outbox import Outbox
+from mqfactory.Queue   import Queue
 
 # a defer exception will skip sending a message and schedule it again at the
 # end of the outbox
@@ -12,30 +13,25 @@ from mqfactory.Outbox import Outbox
 class DeferException(Exception):
   pass
 
-# helper function to apply a list of functions to an object
-
-def wrap(msg, wrappers):
-  for wrapper in wrappers:
-    wrapper(msg)
-
 # the top-level message queue object
 
 def NoneGenerator():
   return None
 
 class MessageQueue(object):
-  def __init__(self, transport, id_generator=NoneGenerator, clock=None):
-    self.transport        = transport
-    self.id_generator     = id_generator
-    self.outbox           = Outbox(self, clock=clock)
-    self.before_sending   = []
-    self.after_sending    = []
-    self.before_handling  = []
-    self.after_handling   = []
+  def __init__(self, transport, ids=NoneGenerator, ticks=None):
+    self.transport       = transport
+    self.ids             = ids
+    self.inbox           = Queue(self, ticks=ticks)
+    self.outbox          = Queue(self, ticks=ticks)
+    self.before_sending  = []
+    self.after_sending   = []
+    self.before_handling = []
+    self.after_handling  = []
     self.transport.connect()
 
   def send(self, to, payload, tags=None):
-    msg = Message(to, payload, tags, id=self.id_generator())
+    msg = Message(to, payload, tags, id=self.ids())
     self.outbox.add(msg)
 
   def process_entire_outbox(self):

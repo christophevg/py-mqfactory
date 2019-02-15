@@ -4,9 +4,9 @@ from mqfactory import MessageQueue
 
 from mqfactory.store import Persisting
 
-def test_store_actions(collection, transport, id_generator, clock):
+def test_store_actions(collection, transport, ids, ticks):
   mq = Persisting(
-         MessageQueue(transport, id_generator=id_generator, clock=clock),
+         MessageQueue(transport, ids=ids, ticks=ticks),
          into=collection
        )
   mq.send("to 1", "load 1")

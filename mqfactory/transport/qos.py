@@ -22,11 +22,11 @@ def check_timeout(message):
   return millis() - message.tags["sent"] >= 5000
 
 class Acknowledgement(object):
-  def __init__(self, mq, timedout=check_timeout, ack_channel="/ack", clock=millis):
+  def __init__(self, mq, timedout=check_timeout, ack_channel="/ack", ticks=millis):
     self.mq = mq
     self.timedout = timedout
     self.ack_channel = ack_channel
-    self.clock = clock
+    self.ticks = ticks
     self.mq.on_message(self.ack_channel, self.handle)
     
   def request_and_wait(self, message):
@@ -47,7 +47,7 @@ class Acknowledgement(object):
     # don't do anything special for ack messages, simple let it be deleted
     if message.to == self.ack_channel: return
     # record sent time
-    message.tags["sent"] = self.clock()
+    message.tags["sent"] = self.ticks()
     logging.debug("scheduling retry for {0}".format(message.id))
     raise DeferException
 
@@ -64,8 +64,8 @@ class Acknowledgement(object):
     except KeyError:
       logging.warn("unknown message ack {0}".format(message.tags["ack"]))
 
-def Acknowledging(mq, ack=None, clock=millis, timedout=check_timeout):
-  acknowledgement = ack or Acknowledgement(mq, clock=clock, timedout=timedout)
+def Acknowledging(mq, ack=None, ticks=millis, timedout=check_timeout):
+  acknowledgement = ack or Acknowledgement(mq, ticks=ticks, timedout=timedout)
   mq.before_sending.append(acknowledgement.request_and_wait)
   mq.after_sending.append(acknowledgement.record_sent_time)
   mq.after_handling.append(acknowledgement.give)

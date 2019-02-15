@@ -3,8 +3,6 @@ import json
 from mqfactory                   import MessageQueue
 from mqfactory.message.format.js import serialize, unserialize, JsonFormatting
 
-from . import TransportMock
-
 def test_serialize(message):
   message.payload = { "data" : message.payload }
   initial_payload = message.payload
@@ -24,8 +22,8 @@ def test_unserialize(message):
   assert message.payload == initial_payload
   assert message.tags    == { "id": message.id }
 
-def test_json_formatting_installer(transport, message, id_generator, clock):
-  mq = MessageQueue(transport, id_generator=id_generator, clock=clock)
+def test_json_formatting_installer(transport, message, ids, ticks):
+  mq = MessageQueue(transport, ids=ids, ticks=ticks)
   JsonFormatting(mq)
   mq.send(message.to, message.payload)
   mq.process_outbox()

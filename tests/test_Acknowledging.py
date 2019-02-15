@@ -19,9 +19,9 @@ def mocked_to(answers=[]):
       return False
   return f
 
-def setup_mq(transport, tos=[], ack_channel="testing", id_generator=None):
-  if not id_generator is None:
-    mq = MessageQueue(transport, id_generator=id_generator)
+def setup_mq(transport, tos=[], ack_channel="testing", ids=None):
+  if not ids is None:
+    mq = MessageQueue(transport, ids=ids)
   else:
     mq = MessageQueue(transport)
   ack = Acknowledgement(mq, timedout=mocked_to(tos), ack_channel=ack_channel)
@@ -58,8 +58,8 @@ def test_receive_ack(transport, message):
 
   assert len(mq.outbox) == 0
 
-def test_give_ack(transport, message, id_generator):
-  mq = setup_mq(transport, id_generator=id_generator)
+def test_give_ack(transport, message, ids):
+  mq = setup_mq(transport, ids=ids)
   def accept(msg):
     pass
   mq.on_message("channel", accept)

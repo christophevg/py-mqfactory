@@ -55,7 +55,7 @@ from mqfactory.transport.qos        import Acknowledging
 # payload formatted using JSON, taking care of serializing and deserializing.
 from mqfactory.message.format.js    import JsonFormatting
 
-# A standard MQ will hold its messages in an `Outbox` in memory. Using a
+# A standard MQ will hold its messages in an `Queue` in memory. Using a
 # `Collection` in a `Store` we can persist these, e.g. to a `MongoStore`.
 from mqfactory.store                import Persisting
 from mqfactory.store.mongo          import MongoStore

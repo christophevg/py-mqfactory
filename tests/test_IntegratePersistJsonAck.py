@@ -16,19 +16,19 @@ def mocked_uid():
   return "uuid-{0}".format(next_uid)
 
 next_ts = 0
-def mocked_clock():
+def mocked_ticks():
   global next_ts
   next_ts += 1000
   return next_ts
 
-def test_two_messages_with_retries_and_acks(transport, collection, id_generator, clock):
+def test_two_messages_with_retries_and_acks(transport, collection, ids, ticks):
   mq = JsonFormatting(
          Acknowledging(
            Persisting(
-             MessageQueue(transport, id_generator=id_generator, clock=clock),
+             MessageQueue(transport, ids=ids, ticks=ticks),
              into=collection
            ),
-           clock=mocked_clock,
+           ticks=mocked_ticks,
            timedout=mocked_to([False, False, True])
          )
        )

@@ -6,7 +6,7 @@ from mqfactory.message.security.rsa import RsaSignature
 from mqfactory.message.security.rsa import generate_key_pair, encode
 from mqfactory.message.security.rsa import serialize, sign, validate
 
-from . import CollectionMock
+from .conftest import CollectionMock
 
 def test_own_key_loading():
   private, public = generate_key_pair()

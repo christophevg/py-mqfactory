@@ -4,7 +4,7 @@ from mqfactory import MessageQueue
 
 from mqfactory.store import Persisting
 
-from . import TransportMock, SignatureMock
+from .conftest import TransportMock, SignatureMock
 
 def test_signing():
   transport = TransportMock()
