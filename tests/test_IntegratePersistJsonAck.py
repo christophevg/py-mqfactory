@@ -9,12 +9,6 @@ from mqfactory.transport.qos     import Acknowledging
 
 from .test_Acknowledging import mocked_to
 
-next_uid = 0
-def mocked_uid():
-  global next_uid
-  next_uid += 1
-  return "uuid-{0}".format(next_uid)
-
 next_ts = 0
 def mocked_ticks():
   global next_ts
@@ -143,14 +137,20 @@ def test_two_messages_with_retries_and_acks(transport, collection, ids, ticks):
   ]
 
   # ack 1
-  transport.deliver_direct( "/ack", json.dumps({ "tags" : { "ack": 1 } }) )
+  transport.deliver_direct( "/ack", json.dumps({
+     "tags" : { "id": "x", "ack": 1 }
+  }))
+  mq.process_inbox()
 
   assert collection.changelog[8::] == [
     ('remove', '1')
   ]
 
   # ack 2
-  transport.deliver_direct( "/ack", json.dumps({ "tags" : { "ack": 2 } }) )
+  transport.deliver_direct( "/ack", json.dumps({
+    "tags" : { "id" : "y", "ack": 2 }
+  }))
+  mq.process_inbox()
 
   assert collection.changelog[9::] == [
     ('remove', '2')

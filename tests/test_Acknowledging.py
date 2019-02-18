@@ -55,6 +55,7 @@ def test_receive_ack(transport, message):
   ack = Message("testing", {}, { "ack" : next(mq.outbox).id } )
   transport.send(ack)
   transport.deliver()
+  mq.process_inbox()
 
   assert len(mq.outbox) == 0
 
@@ -68,6 +69,7 @@ def test_give_ack(transport, message, ids):
   msg.tags["ack"] = "acks"
   transport.send(msg)
   transport.deliver()
+  mq.process_inbox()
 
   assert len(mq.outbox.messages)           == 1
   assert mq.outbox.messages[1].to          == "acks"

@@ -1,3 +1,4 @@
+import logging
 import base64
 import json
 import datetime
@@ -20,20 +21,21 @@ class RsaSignature(Signature):
     self.me   = me
     self.key  = decode(self.keys[self.me]["private"])
 
-  def sign(self, item, ts=None):
-    item.tags["signature"] = {
+  def sign(self, message, ts=None):
+    logging.debug("signing {0}".format(message.id))
+    message.tags["signature"] = {
       "origin" : self.me,
       "ts"     : ts or str(datetime.datetime.utcnow())
     }
-    payload = serialize(item)
-    item.tags["signature"]["hash"] =  base64.b64encode(sign(payload, self.key))
+    payload = serialize(message)
+    message.tags["signature"]["hash"] =  base64.b64encode(sign(payload, self.key))
   
-  def validate(self, item):
-    key = decode(self.keys[item.tags["signature"]["origin"]]["public"])
-    signature =  base64.b64decode(item.tags["signature"].pop("hash"))
-    payload = serialize(item)    
+  def validate(self, message):
+    key = decode(self.keys[message.tags["signature"]["origin"]]["public"])
+    signature =  base64.b64decode(message.tags["signature"].pop("hash"))
+    payload = serialize(message)    
     validate(payload, signature, key)
-    item.tags.pop("signature")
+    message.tags.pop("signature")
 
 # utility functions wrapping cryptography functions
 
@@ -75,10 +77,10 @@ def decode(pem):
       backend=default_backend()
     )
 
-def serialize(item):
+def serialize(message):
   return base64.b64encode(json.dumps({
-    "tags" : item.tags,
-    "payload" : item.payload
+    "tags" : message.tags,
+    "payload" : message.payload
   }, sort_keys=True).encode("utf-8"))
 
 def sign(payload, key):

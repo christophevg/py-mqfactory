@@ -22,6 +22,7 @@ def test_receive_message(transport, message):
   
   transport.items.append(message)
   transport.deliver()
+  mq.process_inbox()
 
   assert len(delivered) == 1
   assert delivered[0] == message
@@ -55,6 +56,7 @@ def test_before_handling_wrappers(transport, message):
   
   transport.items.append(Message(message.to, message.payload))
   transport.deliver()
+  mq.process_inbox()
 
   assert len(delivered) == 1
   assert delivered[0].to == "123{0}321".format(message.to)

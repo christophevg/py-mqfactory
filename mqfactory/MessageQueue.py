@@ -26,6 +26,7 @@ class MessageQueue(object):
     self.outbox          = Queue(self, ticks=ticks)
     self.before_sending  = []
     self.after_sending   = []
+    self.handlers        = {}
     self.before_handling = []
     self.after_handling  = []
     self.transport.connect()
@@ -34,40 +35,52 @@ class MessageQueue(object):
     msg = Message(to, payload, tags, id=self.ids())
     self.outbox.add(msg)
 
-  def process_entire_outbox(self):
-    try:
-      while True:
-        self.process_outbox()
-    except StopIteration:
-      pass
+  def on_message(self, to, handler):
+    self.handlers[to] = handler
+    def store_to_inbox(message):
+      message.private["handler"] = to
+      self.inbox.add(message)
+    self.transport.on_message(to, store_to_inbox)
 
   def process_outbox(self):
-    message = next(self.outbox)
-    try:
-      wrap(message, self.before_sending) # defer here avoids sending
-      self.transport.send(message)
-      wrap(message, self.after_sending)  # defer here avoids deletion
-      self.outbox.remove(message)
-    except DeferException:
-      self.outbox.defer(message)         # defer will put msg at end of queue
-    except Exception as e:
-      logging.warning("sending of {0} failed: {1}".format(str(message), str(e)))
-      logging.exception("message")
+    self.process(
+      self.outbox, self.transport,
+      self.before_sending, self.after_sending
+    )
 
-  def on_message(self, to, handler):
-    def wrapped_handler(message):
+  def process_inbox(self):
+    self.process(
+      self.inbox, self.handlers,
+      self.before_handling[::-1], self.after_handling[::-1]
+    )
+
+  def send_and_receive(self):
+    self.process_outbox()
+    self.process_inbox()
+
+  def process(self, box, transport, before, after):
+    try:
+      message = next(box)
+    except StopIteration:
+      return
+    try:
+      wrap(message, before) # defer here avoids sending
       try:
-        wrap(message, self.before_handling[::-1])
-        handler(message)
-        wrap(message, self.after_handling[::-1])
-      except Exception as e:
-        logging.error(str(e))
-    self.transport.on_message(to, wrapped_handler)
+        transport[message.private["handler"]](message)
+      except KeyError:
+        transport.send(message)
+      wrap(message, after)  # defer here avoids removal
+      box.remove(message)
+    except DeferException:
+      box.defer(message)    # defer will put msg at end of queue
+    except Exception as e:
+      logging.warning("processing {0} failed: {1}".format(str(message), str(e)))
+      logging.exception("message")
 
 def Threaded(mq, interval=0.001):
   def processor():
     while True:
-      mq.process_entire_outbox()
+      mq.send_and_receive()
       time.sleep(interval)
   t = Thread(target=processor)
   t.daemon = True

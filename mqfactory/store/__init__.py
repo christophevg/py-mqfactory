@@ -71,4 +71,6 @@ def Persisting(mq, into=Collection()):
   
   mq.outbox.before_get.append(store.before_get)
 
+  # TODO implement inbox persistence
+
   return mq

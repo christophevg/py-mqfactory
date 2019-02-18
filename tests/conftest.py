@@ -5,9 +5,11 @@ import string
 import copy
 import logging
 
-from mqfactory.message   import Message
-from mqfactory.transport import Transport
-from mqfactory.store     import Store, Collection
+from mqfactory.message              import Message
+from mqfactory.transport            import Transport
+from mqfactory.store                import Store, Collection
+from mqfactory.message.security.rsa import generate_key_pair, encode
+
 
 def generate_random_string(length=10):
   return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
@@ -65,7 +67,9 @@ class TransportMock(Transport):
         logging.warning("no handler for route {0}".format(message.to))
 
   def deliver_direct(self, to, payload):
-    self.routes[to](Message(to, payload))
+    message = Message(to, payload)
+    logging.debug("mocking delivery of {0}".format(message.id))
+    self.routes[to](message)
 
 @pytest.fixture
 def transport():
@@ -200,3 +204,15 @@ class SignatureMock(object):
 
   def validate(self, item):
     assert item.tags["signature"] == self.signature
+
+@pytest.fixture
+def me():
+  return generate_random_string()
+
+@pytest.fixture
+def keys(me):
+  private, public = generate_key_pair()
+  keys = CollectionMock({
+    me : { "private" : encode(private), "public" : encode(public) }
+  })
+  return keys

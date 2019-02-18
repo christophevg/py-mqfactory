@@ -7,6 +7,10 @@ def test_message_as_dictionary(message):
     "tags"    : message.tags
   }
 
+def test_ensure_default_id_generation():
+  message = Message("to", "payload")
+  assert not message.id is None
+
 def test_ensure_id_is_available(message):
   assert "id" in message.tags
   assert message.id == message.tags["id"]

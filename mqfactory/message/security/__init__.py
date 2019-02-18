@@ -1,9 +1,9 @@
 class Signature(object):
-  def sign(self, payload):
-    raise NotImplementedError("implement signing of payload")
+  def sign(self, message):
+    raise NotImplementedError("implement signing of message")
 
-  def validate(self, payload):
-    raise NotImplementedError("implement validation of payload")
+  def validate(self, message):
+    raise NotImplementedError("implement validation of message")
 
 def Signing(mq, adding=Signature()):
   mq.before_sending.append(adding.sign)

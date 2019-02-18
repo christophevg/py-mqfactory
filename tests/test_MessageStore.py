@@ -11,7 +11,9 @@ def test_store_actions(collection, transport, ids, ticks):
        )
   mq.send("to 1", "load 1")
   mq.send("to 2", "load 2")
-  mq.process_entire_outbox()
+
+  mq.process_outbox()
+  mq.process_outbox()
 
   assert len(collection.changelog) == 5
   assert collection.changelog == [
