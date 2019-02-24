@@ -1,3 +1,6 @@
+import copy
+import logging
+
 from pymongo import MongoClient
 from bson.objectid import ObjectId 
 
@@ -39,7 +42,9 @@ class MongoCollection(Collection):
     return self.collection.find_one({"_id": id})
   
   def add(self, doc):
+    logging.debug("adding to collection...")
     id = str(self.collection.insert_one(doc).inserted_id)
+    logging.debug("added as {0}".format(id))
     return id
 
   def remove(self, id):
@@ -50,8 +55,10 @@ class MongoCollection(Collection):
     self.collection.delete_one({"_id" : id})
 
   def update(self, id, doc):
+    updated_doc = copy.deepcopy(doc)
     try:
       id = ObjectId(id)
+      updated_doc["_id"] = ObjectId(updated_doc["_id"])
     except:
       pass
-    self.collection.update_one({"_id" : id}, {"$set" : doc})
+    self.collection.update_one({"_id" : id}, {"$set" : updated_doc})

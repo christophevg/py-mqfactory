@@ -20,20 +20,11 @@ else:
   consoleHandler.setFormatter(formatter)
   logger.addHandler(consoleHandler)
 
-LOG_LEVEL = os.environ.get("LOG_LEVEL") or "DEBUG"
+LOG_LEVEL = os.environ.get("LOG_LEVEL") or "WARN"
 logger.setLevel(logging.getLevelName(LOG_LEVEL))
-
-# provide simple time in milliseconds function
-
-millis = lambda: int(round(time.time() * 1000))
-
-# helper function to apply a list of functions to an object
-
-def wrap(msg, wrappers):
-  for wrapper in wrappers:
-    wrapper(msg)
 
 # expose MessageQueue class from root, to allow a nice import statement like:
 # from mqfactory import MessageQueue
 # ;-)
 from mqfactory.MessageQueue import Threaded, MessageQueue, DeferException
+from mqfactory.Queue        import Queue

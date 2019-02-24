@@ -1,7 +1,8 @@
 import sys
 import logging
 
-from mqfactory import DeferException, millis
+from mqfactory         import DeferException
+from mqfactory.tools   import clock
 from mqfactory.message import Message
 
 '''
@@ -19,54 +20,57 @@ Acknowledgment works in several phases:
 
 def check_timeout(message):
   if not "sent" in message.tags: return True # not sent == send it!
-  return millis() - message.tags["sent"] >= 5000
+  return clock.now() - message.tags["sent"] >= 5000
 
 class Acknowledgement(object):
-  def __init__(self, mq, timedout=check_timeout, ack_channel="/ack", ticks=millis):
+  def __init__(self, mq, ack_channel="ack"):
     self.mq = mq
-    self.timedout = timedout
-    self.ack_channel = ack_channel
-    self.ticks = ticks
+    self.ack_channel = self.mq.name + "/" + ack_channel
     self.mq.on_message(self.ack_channel, self.handle)
+  
+  def log(self, msg, level=logging.info):
+    level("{0}: {1}".format(self.mq.name, msg))
     
   def request_and_wait(self, message):
     # don't do anything special for ack messages
-    if message.to == self.ack_channel: return
+    if "confirm" in message.tags: return
 
     # add the "ack" tag to request an acknowledgement and continue sending it
     if not "ack" in message.tags:
       message.tags["ack"] = self.ack_channel
-      logging.debug("requesting ack for {0}".format(message.id))
+      self.log("requesting ack for {0}".format(message.id))
     else:
       # the ack tag is present, so this message was sent already at least once
       # check for timeout and let it be sent again, or Defer until timeout
-      if not self.timedout(message):
+      if not check_timeout(message):
+        logging.debug("DEFER: message ack was previously requests, but not long enough to resend")
         raise DeferException
+      self.log("need to resend message {0}".format(message.id))
 
   def record_sent_time(self, message):
     # don't do anything special for ack messages, simple let it be deleted
-    if message.to == self.ack_channel: return
+    if "confirm" in message.tags: return
     # record sent time
-    message.tags["sent"] = self.ticks()
-    logging.debug("scheduling retry for {0}".format(message.id))
+    message.tags["sent"] = clock.now()
+    logging.debug("DEFER: scheduling retry for {0}".format(message.id))
     raise DeferException
 
   def give(self, message):
-    if "ack" in message.tags and not message.to == self.ack_channel:
-      logging.debug("acknowledging {0}".format(message.id))
-      self.mq.send( message.tags["ack"], {}, { "ack" : message.id } )
+    if "ack" in message.tags:
+      self.log("acknowledging {0}".format(message.id))
+      self.mq.send( message.tags["ack"], {}, { "confirm" : message.id } )
 
   def handle(self, message):
-    logging.debug("received ack for {0}".format(message.tags["ack"]))
+    self.log("got ack for {0}".format(message.tags["confirm"]))
     try:
-      self.mq.outbox.remove(self.mq.outbox[message.tags["ack"]])
-      logging.debug("popped acked msg {0}".format(message.tags["ack"]))
+      self.mq.outbox.remove(self.mq.outbox[message.tags["confirm"]])
+      logging.debug("popped acked msg {0}".format(message.tags["confirm"]))
     except KeyError:
-      logging.warn("unknown message ack {0}".format(message.tags["ack"]))
+      logging.warning("unknown message ack {0}".format(message.tags["confirm"]))
 
-def Acknowledging(mq, ack=None, ticks=millis, timedout=check_timeout):
-  acknowledgement = ack or Acknowledgement(mq, ticks=ticks, timedout=timedout)
+def Acknowledging(mq, ack=None, return_ack=False):
+  acknowledgement = ack or Acknowledgement(mq)
   mq.before_sending.append(acknowledgement.request_and_wait)
   mq.after_sending.append(acknowledgement.record_sent_time)
   mq.after_handling.append(acknowledgement.give)
-  return mq
+  return acknowledgement if return_ack else mq

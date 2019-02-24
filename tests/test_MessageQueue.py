@@ -8,9 +8,10 @@ def test_send_message(transport, message):
   mq.send(message.to, message.payload)
   mq.process_outbox()
 
-  assert len(transport.items) == 1
-  assert transport.items[0].to == message.to
-  assert transport.items[0].payload == message.payload
+  transport.send.assert_called_once()
+  msg = transport.send.call_args[0][0]
+  assert msg.to == message.to
+  assert msg.payload == message.payload
 
 def test_receive_message(transport, message):
   mq = MessageQueue(transport)
@@ -19,9 +20,14 @@ def test_receive_message(transport, message):
   def accept(msg):
     delivered.append(msg)
   mq.on_message(message.to, accept)
-  
-  transport.items.append(message)
-  transport.deliver()
+
+  # get store_to_inbox handler
+  transport.on_message.assert_called_once()
+  to, store_to_inbox = transport.on_message.call_args[0]
+  assert to == message.to
+
+  # make a delivery
+  store_to_inbox(message)
   mq.process_inbox()
 
   assert len(delivered) == 1
@@ -37,16 +43,18 @@ def test_before_send_wrappers(transport, message):
   mq.send(message.to, message.payload)
   mq.process_outbox()
 
-  assert len(transport.items) == 1
-  assert transport.items[0].to      == "321{0}123".format(message.to)
-  assert transport.items[0].payload == "321{0}123".format(message.payload)
+  transport.send.assert_called_once()
+  msg = transport.send.call_args[0][0]
+
+  assert msg.to      == "321{0}123".format(message.to)
+  assert msg.payload == "321{0}123".format(message.payload)
 
 def test_before_handling_wrappers(transport, message):
   mq = MessageQueue(transport)
 
-  mq.before_handling.append(number(1))
-  mq.before_handling.append(number(2))
-  mq.before_handling.append(number(3))
+  mq.before_handling.append(number(4))
+  mq.before_handling.append(number(5))
+  mq.before_handling.append(number(6))
 
   delivered = []
   def accept(msg):
@@ -54,13 +62,18 @@ def test_before_handling_wrappers(transport, message):
 
   mq.on_message(message.to, accept)
   
-  transport.items.append(Message(message.to, message.payload))
-  transport.deliver()
+  # get store_to_inbox handler
+  assert transport.on_message.called
+  to, store_to_inbox = transport.on_message.call_args[0]
+  assert to == message.to
+
+  # make a delivery
+  store_to_inbox(message.copy())
   mq.process_inbox()
 
   assert len(delivered) == 1
-  assert delivered[0].to == "123{0}321".format(message.to)
-  assert delivered[0].payload == "123{0}321".format(message.payload)
+  assert delivered[0].to == "456{0}654".format(message.to)
+  assert delivered[0].payload == "456{0}654".format(message.payload)
 
 def test_threaded_outbox_processing(transport, message):
   mq = Threaded(MessageQueue(transport), interval=0.1)
@@ -68,10 +81,11 @@ def test_threaded_outbox_processing(transport, message):
   mq.send(message.to, message.payload)
   time.sleep(0.2) # give processor thread time to be run at least once
 
-  assert len(transport.items) == 1
-  assert transport.items[0].to == message.to
-  assert transport.items[0].payload == message.payload
-
+  transport.send.assert_called_once()
+  msg = transport.send.call_args[0][0]
+  assert msg.to == message.to
+  assert msg.payload == message.payload
+  
 # simple message wrapper helper functions
 
 def quotes(msg):

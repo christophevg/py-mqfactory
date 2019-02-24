@@ -1,3 +1,4 @@
+import sys
 import logging
 import base64
 import json
@@ -28,14 +29,18 @@ class RsaSignature(Signature):
       "ts"     : ts or str(datetime.datetime.utcnow())
     }
     payload = serialize(message)
-    message.tags["signature"]["hash"] =  base64.b64encode(sign(payload, self.key))
+    message.tags["signature"]["hash"] = base64.b64encode(sign(payload, self.key))
   
   def validate(self, message):
-    key = decode(self.keys[message.tags["signature"]["origin"]]["public"])
-    signature =  base64.b64decode(message.tags["signature"].pop("hash"))
-    payload = serialize(message)    
-    validate(payload, signature, key)
-    message.tags.pop("signature")
+    try:
+      key = decode(self.keys[message.tags["signature"]["origin"]]["public"])
+      signature =  base64.b64decode(message.tags["signature"].pop("hash"))
+      payload = serialize(message)    
+      validate(payload, signature, key)
+      message.tags.pop("signature")
+    except KeyError as e:
+      logging.exception("message")
+      sys.exit(1)
 
 # utility functions wrapping cryptography functions
 
@@ -78,10 +83,11 @@ def decode(pem):
     )
 
 def serialize(message):
-  return base64.b64encode(json.dumps({
+  serialized = json.dumps({
     "tags" : message.tags,
     "payload" : message.payload
-  }, sort_keys=True).encode("utf-8"))
+  }, sort_keys=True).encode("utf-8")
+  return base64.b64encode(serialized)
 
 def sign(payload, key):
   return key.sign(

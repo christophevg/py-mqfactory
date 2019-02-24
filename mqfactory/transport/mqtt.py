@@ -1,6 +1,6 @@
 try:
   from urllib.parse import urlparse
-except ImportError:
+except ImportError:                 # pragma: no cover
   from urlparse import urlparse
 
 import paho.mqtt.client as mqtt

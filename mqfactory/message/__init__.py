@@ -28,4 +28,17 @@ class Message(object):
     return
 
   def __str__(self):
-    return str(dict(self))
+    return str({
+      "to"     : self.to,
+      "payload": self.payload,
+      "tags"   : self.tags
+    })
+
+  def __eq__(self, other): 
+    return self.to      == other.to \
+       and self.payload == other.payload \
+       and self.tags    == other.tags \
+       and self.private == other.private
+
+  def __ne__(self, other):
+    return not self == other

@@ -1,9 +1,10 @@
 import time
 import logging
+import inspect
 
 from threading import Thread
 
-from mqfactory         import wrap
+from mqfactory.tools   import wrap
 from mqfactory.message import Message
 from mqfactory.Queue   import Queue
 
@@ -15,15 +16,12 @@ class DeferException(Exception):
 
 # the top-level message queue object
 
-def NoneGenerator():
-  return None
-
 class MessageQueue(object):
-  def __init__(self, transport, ids=NoneGenerator, ticks=None):
+  def __init__(self, transport, name="mq"):
     self.transport       = transport
-    self.ids             = ids
-    self.inbox           = Queue(self, ticks=ticks)
-    self.outbox          = Queue(self, ticks=ticks)
+    self.name            = name
+    self.inbox           = Queue(self.name + "-inbox")
+    self.outbox          = Queue(self.name + "-outbox")
     self.before_sending  = []
     self.after_sending   = []
     self.handlers        = {}
@@ -32,7 +30,7 @@ class MessageQueue(object):
     self.transport.connect()
 
   def send(self, to, payload, tags=None):
-    msg = Message(to, payload, tags, id=self.ids())
+    msg = Message(to, payload, tags)
     self.outbox.add(msg)
 
   def on_message(self, to, handler):
@@ -59,8 +57,10 @@ class MessageQueue(object):
     self.process_inbox()
 
   def process(self, box, transport, before, after):
+    caller = inspect.getouterframes(inspect.currentframe())[1][3].split("_")[1]
     try:
       message = next(box)
+      logging.debug("{0}: processing {1}".format(caller, message))
     except StopIteration:
       return
     try:
@@ -70,11 +70,12 @@ class MessageQueue(object):
       except KeyError:
         transport.send(message)
       wrap(message, after)  # defer here avoids removal
+      logging.info("{0}: message sent, removing".format(caller))
       box.remove(message)
     except DeferException:
       box.defer(message)    # defer will put msg at end of queue
     except Exception as e:
-      logging.warning("processing {0} failed: {1}".format(str(message), str(e)))
+      logging.warning("{0}: processing {0} failed".format(caller, str(message)))
       logging.exception("message")
 
 def Threaded(mq, interval=0.001):
