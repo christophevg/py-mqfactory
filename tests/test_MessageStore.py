@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, call
+from mock import patch, call
 
 import time
 import uuid

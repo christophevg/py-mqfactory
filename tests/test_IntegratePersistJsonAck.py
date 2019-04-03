@@ -1,6 +1,6 @@
 import json
 
-from unittest.mock import Mock, patch, call
+from mock import Mock, patch, call
 
 from mqfactory import MessageQueue
 

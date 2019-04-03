@@ -1,5 +1,6 @@
 import pytest
-from unittest.mock import Mock, MagicMock, create_autospec
+
+from mock import Mock, MagicMock, create_autospec
 
 import random
 import string

@@ -1,6 +1,6 @@
 import pytest
 
-from unittest.mock import Mock, patch
+from mock import Mock, patch
 
 from mqfactory               import DeferException
 from mqfactory.transport.qos import check_timeout
