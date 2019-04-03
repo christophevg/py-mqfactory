@@ -21,7 +21,7 @@ After a first rough implementation, specific for my original use case, I felt th
 
 ## Contents
 
-* [What's in the Box](whats-in-the-box.md)
+* [What is in the Box](whats-in-the-box.md)
 * [Getting Started](getting-started.md)
 * [Extending MQ Factory](extending.md)
 * [Contributing](contributing.md)
