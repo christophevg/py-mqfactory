@@ -2,12 +2,12 @@
 
 > A framework for building message queues using Python
 
-[![Latest Version on PyPI](https://img.shields.io/pypi/v/mqfactory.svg)](https://pypi.python.org/pypi/mqfactory/)
-[![Supported Implementations](https://img.shields.io/pypi/pyversions/mqfactory.svg)](https://pypi.python.org/pypi/mqfactory/)
-[![Build Status](https://secure.travis-ci.org/christophevg/py-mqfactory.svg?branch=master)](http://travis-ci.org/christophevg/py-mqfactory)
-[![Documentation Status](https://readthedocs.org/projects/mqfactory/badge/?version=latest)](https://mqfactory.readthedocs.io/en/latest/?badge=latest)
-[![Coverage Status](https://coveralls.io/repos/github/christophevg/py-mqfactory/badge.svg?branch=master)](https://coveralls.io/github/christophevg/py-mqfactory?branch=master)
-[![Built with PyPi Template](https://img.shields.io/badge/PyPi_Template-v0.0.5-blue.svg)](https://github.com/christophevg/pypi-template)
+[![](https://img.shields.io/pypi/v/mqfactory.svg)](https://pypi.python.org/pypi/mqfactory/)
+[![](https://img.shields.io/pypi/pyversions/mqfactory.svg)](https://pypi.python.org/pypi/mqfactory/)
+[![](https://secure.travis-ci.org/christophevg/py-mqfactory.svg?branch=master)](http://travis-ci.org/christophevg/py-mqfactory)
+[![](https://readthedocs.org/projects/mqfactory/badge/?version=latest)](https://mqfactory.readthedocs.io/en/latest/?badge=latest)
+[![](https://coveralls.io/repos/github/christophevg/py-mqfactory/badge.svg?branch=master)](https://coveralls.io/github/christophevg/py-mqfactory?branch=master)
+[![](https://img.shields.io/badge/PyPi_Template-v0.0.6-blue.svg)](https://github.com/christophevg/pypi-template)
 
 ```eval_rst
 .. warning:: **Work in Progress** - I've only just started working on this and I'm literally exploring my own code as I write it ;-) So until this warning is removed, I wouldn't trust myself using this ;-) Do play with it, but remember things can and will change overnight.
