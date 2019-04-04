@@ -1,5 +1,5 @@
 import logging
-from threading import Lock
+from threading import RLock
 
 from mqfactory.tools import clock, wrap
 
@@ -14,7 +14,7 @@ class Queue(object):
     self.before_defer  = []
     self.after_defer   = []
     self.before_get    = []
-    self.lock = Lock()
+    self.lock = RLock()
 
   def add(self, message, wrapping=True):
     with self.lock:
