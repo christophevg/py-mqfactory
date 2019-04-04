@@ -24,7 +24,7 @@ test: requirements
 	. venv/bin/activate; tox
 
 coverage: test
-	. venv/bin/activate; coverage report
+	. venv/bin/activate; coverage report; coverage html
 
 docs: requirements
 	. venv/bin/activate; cd docs; make html
