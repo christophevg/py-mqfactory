@@ -16,11 +16,24 @@ from mqfactory.message.security import Signature
 
 import socket
 
+class Decoded(object):
+  def __init__(self, keys):
+    self.keys = keys
+
+  def __getitem__(self, name):
+    key = self.keys[name]
+    if not isinstance(key["public"], rsa.RSAPublicKey):
+      return {
+        "private": decode(key["private"]),
+        "public" : decode(key["public"])
+      }
+    return key
+
 class RsaSignature(Signature):
   def __init__(self, keys, me=socket.gethostname()):
-    self.keys = keys
+    self.keys = Decoded(keys)
     self.me   = me
-    self.key  = decode(self.keys[self.me]["private"])
+    self.key  = self.keys[self.me]["private"]
 
   def sign(self, message, ts=None):
     logging.debug("signing {0}".format(message.id))
@@ -33,7 +46,7 @@ class RsaSignature(Signature):
   
   def validate(self, message):
     try:
-      key = decode(self.keys[message.tags["signature"]["origin"]]["public"])
+      key = self.keys[message.tags["signature"]["origin"]]["public"]
       signature =  base64.b64decode(message.tags["signature"].pop("hash"))
       payload = serialize(message)    
       validate(payload, signature, key)

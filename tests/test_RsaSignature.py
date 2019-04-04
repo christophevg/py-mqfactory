@@ -2,9 +2,20 @@ import pytest
 
 import base64
 
+from mqfactory.message.security.rsa import Decoded
 from mqfactory.message.security.rsa import RsaSignature
 from mqfactory.message.security.rsa import sign, validate
 from mqfactory.message.security.rsa import serialize, encode, decode
+from mqfactory.message.security.rsa import generate_key_pair
+
+def test_transparent_key_decoding(keys, me):
+  encoded = Decoded(keys)
+  assert keys[me]["private"] == encode(encoded[me]["private"])
+  private, public = generate_key_pair()
+  decoded = Decoded({
+    me : { "private" : private, "public" : public }
+  })
+  assert encode(private) == encode(decoded[me]["private"])
 
 def test_own_key_loading(keys, me):
   signer = RsaSignature(keys, me=me)
