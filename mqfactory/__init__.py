@@ -14,7 +14,7 @@ formatter = logging.Formatter(
 )
 
 if len(logger.handlers) > 0:
-  logger.handlers[0].setFormatter(formatter)
+  logger.handlers[0].setFormatter(formatter) # pragma: no cover
 else:
   consoleHandler = logging.StreamHandler()
   consoleHandler.setFormatter(formatter)

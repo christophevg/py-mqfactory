@@ -45,15 +45,11 @@ class RsaSignature(Signature):
     message.tags["signature"]["hash"] = base64.b64encode(sign(payload, self.key))
   
   def validate(self, message):
-    try:
-      key = self.keys[message.tags["signature"]["origin"]]["public"]
-      signature =  base64.b64decode(message.tags["signature"].pop("hash"))
-      payload = serialize(message)    
-      validate(payload, signature, key)
-      message.tags.pop("signature")
-    except KeyError as e:
-      logging.exception("message")
-      sys.exit(1)
+    key = self.keys[message.tags["signature"]["origin"]]["public"]
+    signature =  base64.b64decode(message.tags["signature"].pop("hash"))
+    payload = serialize(message)    
+    validate(payload, signature, key)
+    message.tags.pop("signature")
 
 # utility functions wrapping cryptography functions
 

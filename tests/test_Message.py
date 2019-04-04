@@ -28,3 +28,8 @@ def test_string_representation(message):
     "payload": message.payload,
     "tags"   : message.tags
   })
+
+def test_message_comparison(message):
+  message2 = Message(message.to, message.payload, message.tags, message.id)
+  assert message == message2
+  assert not message != message2

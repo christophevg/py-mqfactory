@@ -1,3 +1,4 @@
+import pytest
 import time
 
 from mqfactory         import Threaded, MessageQueue
@@ -85,7 +86,19 @@ def test_threaded_outbox_processing(transport, message):
   msg = transport.send.call_args[0][0]
   assert msg.to == message.to
   assert msg.payload == message.payload
-  
+
+def test_failing_processing(transport, message):
+  mq = MessageQueue(transport)
+  class SomeException(Exception): pass
+  called = []
+  def failing_wrapper(mq):
+    called.append(True)
+    raise SomeException
+  mq.before_sending.append(failing_wrapper)
+  mq.send(message.to, message.payload)
+  mq.process_outbox()
+  assert len(called) == 1
+
 # simple message wrapper helper functions
 
 def quotes(msg):

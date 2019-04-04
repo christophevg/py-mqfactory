@@ -10,14 +10,14 @@ class MongoStore(Store):
   def __init__(self, uri=None, client=None, database=None, timeout=5000):
     assert not uri is None or (not client is None and not database is None),\
            "Please provide a uri or client and database."
-    self.client = client or self.create_client(uri, timeout=timeout)
+    self.client = client
+    if self.client is None: self.create_client(uri, timeout=timeout)
     database = database or uri.split("/")[-1]
     self.database = self.client[database]
 
   def create_client(self, uri=None, timeout=5000):
-    mongo = MongoClient(uri, serverSelectionTimeoutMS=timeout)
-    mongo.admin.command("ismaster")
-    return mongo
+    self.client = MongoClient(uri, serverSelectionTimeoutMS=timeout)
+    self.client.admin.command("ismaster")
   
   def __getitem__(self, collection):
     return MongoCollection(self.database[collection])

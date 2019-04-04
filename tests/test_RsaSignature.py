@@ -2,6 +2,8 @@ import pytest
 
 import base64
 
+from cryptography.exceptions import InvalidSignature
+
 from mqfactory.message.security.rsa import Decoded
 from mqfactory.message.security.rsa import RsaSignature
 from mqfactory.message.security.rsa import sign, validate
@@ -44,3 +46,16 @@ def test_validation(message, keys, me):
   )
   signer = RsaSignature(keys, me=me)
   signer.validate(message)
+
+def test_failing_validation(message, keys, me):
+  message.tags["signature"] = {
+    "origin": me,
+    "ts"    : "now"
+  }
+  message.tags["signature"]["hash"] = base64.b64encode(
+    sign(serialize(message), decode(keys[me]["private"]))
+  )
+  signer = RsaSignature(keys, me=me)
+  message.payload = message.payload + "something bad"
+  with pytest.raises(InvalidSignature):
+    signer.validate(message)

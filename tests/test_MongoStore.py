@@ -2,6 +2,7 @@ import copy
 import mongomock
 import pytest
 import pymongo
+from bson.objectid import ObjectId 
 
 from mqfactory.store.mongo import MongoStore, MongoCollection
 
@@ -47,12 +48,26 @@ def test_loading_documents():
     del doc["_id"]
   assert loaded_docs == docs
 
+def test_getting_documents():
+  mongo = mongomock.MongoClient().db
+  docs = [
+    { "doc" : "test 1" },
+    { "doc" : "test 2" },
+    { "doc" : "test 3", "_id" : "id3" }
+  ]
+  mongo.col.insert_many(copy.deepcopy(docs))
+  col = MongoCollection(mongo["col"])
+  doc = mongo.col.find_one({"doc": "test 2"})
+  assert col[doc["_id"]]["doc"] == "test 2"
+  assert col[str(doc["_id"])]["doc"] == "test 2"
+  assert col["id3"]["doc"] == "test 3"
+
 def test_removing_documents():
   mongo = mongomock.MongoClient().db
   docs = [
     { "doc" : "test 1" },
     { "doc" : "test 2" },
-    { "doc" : "test 3" }
+    { "doc" : "test 3", "_id" : "id3" }
   ]
   mongo.col.insert_many(copy.deepcopy(docs))
   col = MongoCollection(mongo["col"])
@@ -66,12 +81,15 @@ def test_removing_documents():
   doc = mongo.col.find_one({"doc" : "test 3"}, {"_id": False})
   assert doc == {"doc" : "test 3"}
 
+  col.remove("id3")
+  assert mongo.col.count_documents({}) == 1
+
 def test_updating_documents():
   mongo = mongomock.MongoClient().db
   docs = [
     { "doc" : "test 1" },
     { "doc" : "test 2" },
-    { "doc" : "test 3" }
+    { "doc" : "test 3", "_id" : "id3" }
   ]
   mongo.col.insert_many(copy.deepcopy(docs))
   col = MongoCollection(mongo["col"])
@@ -88,3 +106,7 @@ def test_updating_documents():
   assert doc == {"doc" : "test 2", "more" : True}
   doc = mongo.col.find_one({"doc" : "test 3"}, {"_id": False})
   assert doc == {"doc" : "test 3"}
+
+  col.update("id3", {"doc" : "something else"})
+  doc = mongo.col.find_one({"_id" : "id3"}, {"_id": False})
+  assert doc == {"doc" : "something else"}

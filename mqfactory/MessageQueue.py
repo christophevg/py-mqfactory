@@ -77,6 +77,7 @@ class MessageQueue(object):
     except Exception as e:
       logging.warning("{0}: processing {0} failed".format(caller, str(message)))
       logging.exception("message")
+      # TODO: failing messages remain in the queue and might fail forever
 
 def Threaded(mq, interval=0.001):
   def processor():
