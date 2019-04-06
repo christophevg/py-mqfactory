@@ -13,3 +13,24 @@ clock = Millis()
 def wrap(msg, wrappers):
   for wrapper in wrappers: wrapper(msg)
 
+# basic first-match Policy
+
+class Rule(object):
+  def __init__(self, pattern={}, value=None):
+    self.pattern = pattern
+    self.value   = value
+
+  def matches(self, instance):
+    for key, value in self.pattern.items():
+      try:    assert instance[key] == value
+      except: return False
+    return True
+
+CATCH_ALL = Rule({}, None)
+
+class Policy(object):
+  def __init__(self, rules=[]):
+    self.rules = rules
+
+  def match(self, instance):
+    return next((rule for rule in self.rules if rule.matches(instance)), CATCH_ALL)
