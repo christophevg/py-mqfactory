@@ -8,6 +8,8 @@ import paho.mqtt.client as mqtt
 from mqfactory.message   import Message
 from mqfactory.transport import Transport
 
+from mqfactory.tools     import Rule
+
 class MQTTTransport(Transport):
   def __init__(self, uri, paho=None, id="", qos=0):
     super(MQTTTransport, self).__init__()
@@ -54,3 +56,7 @@ class MQTTTransport(Transport):
     self.subscriptions.append((to, handler))
     if self.connected:
       self.register_callback(to, handler)
+
+class TransportRule(Rule):
+  def match(self, actual, expected):
+    return mqtt.topic_matches_sub(expected, actual)

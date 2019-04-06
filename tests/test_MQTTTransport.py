@@ -1,7 +1,7 @@
 import pytest
 from mock import Mock
 
-from mqfactory.transport.mqtt import MQTTTransport
+from mqfactory.transport.mqtt import MQTTTransport, TransportRule
 
 def test_client_id(paho):
   transport = MQTTTransport("mqtt://localmock:1883", paho=paho, id="test")
@@ -75,3 +75,12 @@ def test_subscription_when_connected(paho, message, paho_message):
 def test_authenticated_connection(paho):
   transport = MQTTTransport("mqtt://user:pass@localmock:1883", paho=paho)
   paho.username_pw_set.assert_called_with("user", "pass")
+
+def test_transport_rule():
+  message = { "to" : "a/path/with/levels" }
+  assert TransportRule({"to": "a/path/with/levels"}, True).matches(message)
+  assert not TransportRule({"to": "some/other/path"}, True).matches(message)
+  assert TransportRule({"to": "a/+/with/+"}, True).matches(message)
+  assert not TransportRule({"to": "a/+/with/nothng"}, True).matches(message)
+  assert TransportRule({"to": "a/#"}, True).matches(message)
+  assert not TransportRule({"to": "not/#"}, True).matches(message)

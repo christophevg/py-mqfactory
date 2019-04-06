@@ -22,9 +22,12 @@ class Rule(object):
 
   def matches(self, instance):
     for key, value in self.pattern.items():
-      try:    assert instance[key] == value
+      try: assert self.match(instance[key], value)
       except: return False
     return True
+
+  def match(self, actual, expected):
+    return actual == expected
 
 CATCH_ALL = Rule({}, None)
 

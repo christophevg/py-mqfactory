@@ -35,7 +35,7 @@ class RsaSignature(Signature):
     self.me   = me
     self.key  = self.keys[self.me]["private"]
 
-  def sign(self, message, ts=None):
+  def _sign(self, message, ts=None):
     logging.debug("signing {0}".format(message.id))
     message.tags["signature"] = {
       "origin" : self.me,
@@ -44,7 +44,7 @@ class RsaSignature(Signature):
     payload = serialize(message)
     message.tags["signature"]["hash"] = base64.b64encode(sign(payload, self.key))
   
-  def validate(self, message):
+  def _validate(self, message):
     key = self.keys[message.tags["signature"]["origin"]]["public"]
     signature =  base64.b64decode(message.tags["signature"].pop("hash"))
     payload = serialize(message)    
