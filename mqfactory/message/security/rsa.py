@@ -1,5 +1,8 @@
 import sys
 import logging
+
+logger = logging.getLogger(__name__)
+
 import base64
 import json
 import datetime
@@ -36,7 +39,7 @@ class RsaSignature(Signature):
     self.key  = self.keys[self.me]["private"]
 
   def _sign(self, message, ts=None):
-    logging.debug("signing {0}".format(message.id))
+    logger.debug("signing {0}".format(message.id))
     message.tags["signature"] = {
       "origin" : self.me,
       "ts"     : ts or str(datetime.datetime.utcnow())

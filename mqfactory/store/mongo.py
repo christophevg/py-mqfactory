@@ -1,6 +1,8 @@
 import copy
 import logging
 
+logger = logging.getLogger(__name__)
+
 from pymongo import MongoClient
 from bson.objectid import ObjectId 
 
@@ -42,9 +44,9 @@ class MongoCollection(Collection):
     return self.collection.find_one({"_id": id})
   
   def add(self, doc):
-    logging.debug("adding to collection...")
+    logger.debug("adding to collection...")
     id = str(self.collection.insert_one(doc).inserted_id)
-    logging.debug("added as {0}".format(id))
+    logger.debug("added as {0}".format(id))
     return id
 
   def remove(self, id):

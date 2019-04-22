@@ -1,5 +1,7 @@
 import logging
 
+logger = logging.getLogger(__name__)
+
 class Transport(object):
   def __init__(self):
     self.before_sending  = []
@@ -15,7 +17,7 @@ class Transport(object):
     message = message.copy()
     for wrapper in self.before_sending:
       wrapper(message)
-    logging.debug("sending: {0}".format(message))
+    logger.debug("sending: {0}".format(message))
     self._send(message)
 
   def _send(self, message):

@@ -1,5 +1,4 @@
 import time
-import logging
 
 # provide simple access to time in milliseconds
 

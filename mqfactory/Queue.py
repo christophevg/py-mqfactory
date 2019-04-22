@@ -1,4 +1,7 @@
 import logging
+
+logger = logging.getLogger(__name__)
+
 from threading import RLock
 
 from mqfactory.tools import clock, wrap
@@ -18,7 +21,7 @@ class Queue(object):
 
   def add(self, message, wrapping=True):
     with self.lock:
-      logging.info("queue[{0}]: add: {1}".format(self.name, message.id))
+      logger.info("queue[{0}]: add: {1}".format(self.name, message.id))
       if wrapping: wrap(message, self.before_add)
       self.messages[message.id] = message
       message.private["last"] = clock.now()
@@ -26,7 +29,7 @@ class Queue(object):
 
   def remove(self, message):
     with self.lock:
-      logging.info("queue[{0}]: remove: {1}".format(self.name, message.id))
+      logger.info("queue[{0}]: remove: {1}".format(self.name, message.id))
       wrap(message, self.before_remove)
       del self.messages[message.id]
       wrap(message, self.after_remove)

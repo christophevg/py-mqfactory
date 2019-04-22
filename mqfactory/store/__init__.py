@@ -1,5 +1,7 @@
 import logging
 
+logger = logging.getLogger(__name__)
+
 from mqfactory.message import Message
 
 class Store(object):
@@ -40,7 +42,7 @@ class MessageStore(object):
 
   def after_add(self, message):
     message.private["store-id"] = self.collection.add(dict(message))
-    logging.debug("store: after_add: message {0} stored as {1}".format(
+    logger.debug("store: after_add: message {0} stored as {1}".format(
       message.id, message.private["store-id"]
     ))
 
@@ -57,19 +59,19 @@ class MessageStore(object):
     try:
       self.collection.update(message.private["store-id"], dict(message))
     except Exception as e:
-      logging.error("store: after_defer: update failed for {0}: {1}".format(
+      logger.error("store: after_defer: update failed for {0}: {1}".format(
         str(message), str(e)
       ))
 
   def load_messages(self):
     if not self.loaded:
-      logging.info("loading messages...")
+      logger.info("loading messages...")
       for doc in self.collection.load():
         message = Message(doc["to"], doc["payload"], doc["tags"])
         message.private["store-id"] = doc["_id"]
         self.queue.add(message, wrapping=False)
       self.loaded = True
-      logging.info("loaded")
+      logger.info("loaded")
 
 def Persisting(mq, outbox=None, inbox=None):
   if outbox: MessageStore(mq.outbox, outbox)

@@ -1,6 +1,8 @@
 import sys
 import logging
 
+logger = logging.getLogger(__name__)
+
 from mqfactory         import DeferException
 from mqfactory.tools   import clock
 from mqfactory.message import Message
@@ -28,7 +30,7 @@ class Acknowledgement(object):
     self.ack_channel = self.mq.name + "/" + ack_channel
     self.mq.on_message(self.ack_channel, self.handle)
   
-  def log(self, msg, level=logging.info):
+  def log(self, msg, level=logger.info):
     level("{0}: {1}".format(self.mq.name, msg))
     
   def request_and_wait(self, message):
@@ -43,7 +45,7 @@ class Acknowledgement(object):
       # the ack tag is present, so this message was sent already at least once
       # check for timeout and let it be sent again, or Defer until timeout
       if not check_timeout(message):
-        logging.debug("DEFER: message ack was previously requests, but not long enough to resend")
+        logger.debug("DEFER: message ack was previously requests, but not long enough to resend")
         raise DeferException
       self.log("need to resend message {0}".format(message.id))
 
@@ -52,7 +54,7 @@ class Acknowledgement(object):
     if "confirm" in message.tags: return
     # record sent time
     message.tags["sent"] = clock.now()
-    logging.debug("DEFER: scheduling retry for {0}".format(message.id))
+    logger.debug("DEFER: scheduling retry for {0}".format(message.id))
     raise DeferException
 
   def give(self, message):
@@ -64,9 +66,9 @@ class Acknowledgement(object):
     self.log("got ack for {0}".format(message.tags["confirm"]))
     try:
       self.mq.outbox.remove(self.mq.outbox[message.tags["confirm"]])
-      logging.debug("popped acked msg {0}".format(message.tags["confirm"]))
+      logger.debug("popped acked msg {0}".format(message.tags["confirm"]))
     except KeyError:
-      logging.warning("unknown message ack {0}".format(message.tags["confirm"]))
+      logger.warning("unknown message ack {0}".format(message.tags["confirm"]))
 
 def Acknowledging(mq, ack=None, return_ack=False):
   acknowledgement = ack or Acknowledgement(mq)

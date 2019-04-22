@@ -1,5 +1,8 @@
 import time
 import logging
+
+logger = logging.getLogger(__name__)
+
 import inspect
 
 from threading import Thread
@@ -60,7 +63,7 @@ class MessageQueue(object):
     caller = inspect.getouterframes(inspect.currentframe())[1][3].split("_")[1]
     try:
       message = next(box)
-      logging.debug("{0}: processing {1}".format(caller, message))
+      logger.debug("{0}: processing {1}".format(caller, message))
     except StopIteration:
       return
     try:
@@ -70,13 +73,13 @@ class MessageQueue(object):
       except KeyError:
         transport.send(message)
       wrap(message, after)  # defer here avoids removal
-      logging.info("{0}: message sent, removing".format(caller))
+      logger.info("{0}: message sent, removing".format(caller))
       box.remove(message)
     except DeferException:
       box.defer(message)    # defer will put msg at end of queue
     except Exception as e:
-      logging.warning("{0}: processing {0} failed".format(caller, str(message)))
-      logging.exception("message")
+      logger.warning("{0}: processing {0} failed".format(caller, str(message)))
+      logger.exception("message")
       # TODO: failing messages remain in the queue and might fail forever
 
 def Threaded(mq, interval=0.001):

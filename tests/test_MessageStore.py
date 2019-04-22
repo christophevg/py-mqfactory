@@ -73,7 +73,7 @@ def test_defer(queue, collection, message):
 
 # TODO test all aspects in the same way, with less dependencies on MQ
 
-@patch("mqfactory.store.logging")
+@patch("mqfactory.store.logger")
 def test_defer_exception_logging(mocked_logging, queue, collection, message):
   ms = MessageStore(queue, collection)
   ms.after_defer(message)
