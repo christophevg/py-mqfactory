@@ -1,4 +1,4 @@
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 # expose main MQ classes from the module root, to allow a nice import statement
 # like: from mqfactory import MessageQueue ;-)
